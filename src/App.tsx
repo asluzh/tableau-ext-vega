@@ -11,7 +11,7 @@ function App() {
 
   return (
     <>
-      <div id="viz">test</div>
+      <div id="viz">test message</div>
     </>
   )
 }
