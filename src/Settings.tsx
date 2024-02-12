@@ -4,16 +4,16 @@
 //   Worksheet
 // } from '@tableau/extensions-api-types';
 //import { useState } from 'react'
-import './App.css'
+// import './App.css'
 
-function App() {
+function Settings() {
 //  const [count, setCount] = useState(0)
 
   return (
     <>
-      <div id="viz">test</div>
+      <div id="dialog"></div>
     </>
   )
 }
 
-export default App
+export default Settings
