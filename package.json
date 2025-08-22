@@ -1,18 +1,22 @@
 {
   "name": "tableau-ext-vega",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
+    "prepublish": "npm run build",
+    "publish": "gh-pages -d dist -m 'Publish with gh-pages'",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tableau/extensions-api-types": "^1.14.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-vega": "^7.7.1",
+    "vega-embed": "^7.0.2",
     "vega-lite": "^6.2.0"
   },
   "devDependencies": {
