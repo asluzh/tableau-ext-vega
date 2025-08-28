@@ -5,7 +5,7 @@ import './Extension.css'
 // Declare this so our linter knows that tableau is a global object
 /* global tableau */
 
-export default function App(props) {
+export default function Extension(props) {
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
     console.debug('[Extension.jsx] useEffect props changed:', props);
@@ -22,7 +22,7 @@ export default function App(props) {
 
   function configure () {
     console.debug('[Extension.jsx] Opening configure popup');
-    const popupUrl = `${window.location.origin}/configure`;
+    const popupUrl = `${window.location.origin}${import.meta.env.BASE_URL}configure.html`;
     tableau.extensions.ui.displayDialogAsync(popupUrl, null, { height: 500, width: 500 }).then((closePayload) => {
       console.debug('[Extension.jsx] displayDialogAsync was closed with payload:', closePayload);
       // refreshSettings();
