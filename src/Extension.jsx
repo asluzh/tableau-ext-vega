@@ -6,15 +6,17 @@ import './Extension.css'
 /* global tableau */
 
 export default function App(props) {
+  // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
-    console.debug('[Extension.jsx] Props Changed', props);
+    console.debug('[Extension.jsx] useEffect props changed', props);
   }, [props]);
 
   useEffect(() => {
     console.debug('[Extension.jsx] useEffect');
-    //console.debug('[Extension.jsx] Initialise Extension', props);
+    console.log(tableau);
     //Initialise Extension
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
+      console.debug('[Extension.jsx] initializeAsync completed');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -23,7 +25,7 @@ export default function App(props) {
     console.debug('[Extension.jsx] Opening configure popup');
     const popupUrl = `${window.location.origin}/configure`;
     tableau.extensions.ui.displayDialogAsync(popupUrl, null, { height: 500, width: 500 }).then((closePayload) => {
-      console.debug('[Extension.jsx] Dialog was closed with payload:', closePayload);
+      console.debug('[Extension.jsx] displayDialogAsync was closed with payload:', closePayload);
       // refreshSettings();
       console.debug('[Extension.jsx] Config window closed', props)
     }).catch((error) => {
