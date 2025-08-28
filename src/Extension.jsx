@@ -8,12 +8,11 @@ import './Extension.css'
 export default function App(props) {
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
-    console.debug('[Extension.jsx] useEffect props changed', props);
+    console.debug('[Extension.jsx] useEffect props changed:', props);
   }, [props]);
 
   useEffect(() => {
     console.debug('[Extension.jsx] useEffect');
-    console.log(tableau);
     //Initialise Extension
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
       console.debug('[Extension.jsx] initializeAsync completed');
