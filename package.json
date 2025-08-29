@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tableau/extensions-api-types": "^1.14.0",
+    "@tableau/tableau-ui": "^3.10.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-vega": "^7.7.1",

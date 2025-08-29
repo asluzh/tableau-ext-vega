@@ -44,17 +44,10 @@ export default function Extension(props) {
       $schema: "https://vega.github.io/schema/vega-lite/v6.json",
       data: {
         values: [
-          {
-            "i-type": "A",
-            count: 3,
-            color: "rgb(121, 199, 227)"
-          },
-          {
-            "i-type": "B",
-            count: 20,
-            color: "rgb(26, 49, 119)"
-          },
-          { "i-type": "C", count: 24, color: "rgb(18, 147, 154)" }
+          { "i-type": "A", "count": 3, "color": "rgb(121, 199, 227)" },
+          { "i-type": "B", "count": 20, "color": "rgb(26, 49, 119)" },
+          { "i-type": "C", "count": 24, "color": "rgb(18, 147, 154)" },
+          { "i-type": "D", "count": 6, "color": "rgba(154, 18, 18, 1)" },
         ]
       },
       description: "A simple pie chart with labels.",
