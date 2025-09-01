@@ -5,13 +5,12 @@ export default function SelectSheet(props) {
   const [selectedSheet, setSelectedSheet] = useState(props.selectedSheet);
 
   function handleChange(event) {
-    const sheetName = event.target.value;
-    setSelectedSheet(sheetName);
-    props.selectSheet(sheetName);
+    setSelectedSheet(event.target.value);
+    props.updateSheet(event.target.value);
   }
 
   return (
-    <div>
+    <div style={{ marginTop: 20, marginBottom: 20 }}>
       <DropdownSelect
         kind='outline'
         label="Select Data Source Sheet"

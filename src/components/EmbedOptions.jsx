@@ -2,15 +2,20 @@ import { useState } from 'react'
 import { DropdownSelect } from '@tableau/tableau-ui';
 
 export default function EmbedOptions(props) {
-  const [embedOption, setEmbedOption] = useState(props.embedMode);
+  const [embedMode, setEmbedMode] = useState(props.embedMode);
+
+  function handleChange(event) {
+    setEmbedMode(event.target.value);
+    props.updateEmbedMode(event.target.value);
+  }
 
   return (
-    <div>
+    <div style={{ marginTop: 20, marginBottom: 20 }}>
       <DropdownSelect
         kind='line'
         label="Embed Mode"
-        value={embedOption}
-        onChange={e => setEmbedOption(e.target.value)}
+        value={embedMode}
+        onChange={handleChange}
         style={{ width: '300px' }}
       >
         <option value="vega">Vega</option>

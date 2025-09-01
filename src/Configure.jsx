@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Tabs, Button } from '@tableau/tableau-ui';
-import './Configure.css'
 import SelectSheet from './components/SelectSheet';
 import JsonSpec from './components/JsonSpec';
 import EmbedOptions from './components/EmbedOptions';
+import './Configure.css'
 
 // Declare this so our linter knows that tableau is a global object
 /* global tableau */
 
 export default function Configure(props) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [config, changeConfig] = useState({
+    selectedSheet: "",
+    jsonSpec: "",
+    embedMode: "vega-lite",
+  });
 
   useEffect(() => {
     console.debug('[Configure.jsx] useEffect props changed:', props);
@@ -19,16 +24,33 @@ export default function Configure(props) {
     console.debug('[Configure.jsx] useEffect');
     //Initialise Extension
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
-      console.log('[Configure.js] Initialise Dialog', openPayload);
+      console.debug('[Configure.jsx] Initialize Dialog', openPayload);
     });
   }, []);
 
   function selectSheetHandler(name) {
-    console.log('[Configure.jsx] selectSheetHandler', name);
+    console.debug('[Configure.jsx] selectSheetHandler', name);
+    changeConfig(prevConfig => ({...prevConfig,
+      selectedSheet: name
+    }));
+  }
+
+  function embedModeHandler(mode) {
+    console.debug('[Configure.jsx] embedModeHandler', mode);
+    changeConfig(prevConfig => ({...prevConfig,
+      embedMode: mode
+    }));
+  }
+
+  function jsonSpecHandler(spec) {
+    console.debug('[Configure.jsx] jsonSpecHandler', spec);
+    changeConfig(prevConfig => ({...prevConfig,
+      jsonSpec: spec
+    }));
   }
 
   function saveSettingsHandler() {
-    console.log('[Configure.js] saveSettingsHandler - Saving Settings', props);
+    console.debug('[Configure.jsx] saveSettingsHandler');
     // const meta = props.meta;
     // const label = props.label;
     // const style = props.style;
@@ -52,7 +74,7 @@ export default function Configure(props) {
   }
 
   function resetSettingsHandler() {
-    console.log('[Configure.js] resetSettingsHandler - Reset Settings');
+    console.debug('[Configure.jsx] resetSettingsHandler');
     // initializeMeta()
     //   .then(meta => {
     //     props.updateMeta(meta);
@@ -68,10 +90,10 @@ export default function Configure(props) {
           selectedTabIndex={selectedTabIndex}
           tabs={[ { content: 'Select Data' }, { content: 'Vega Options' } ]}
           >
-          <div>
-          { selectedTabIndex === 0 ? <SelectSheet sheets={[{name: 'sheet1'},{name: 'sheet2'}]} selectSheet={selectSheetHandler} /> : null }
-          { selectedTabIndex === 1 ? <EmbedOptions embedMode="vega-lite" /> : null }
-          { selectedTabIndex === 1 ? <JsonSpec spec="" /> : null }
+          <div className='configBody'>
+          { selectedTabIndex === 0 ? <SelectSheet sheets={[{name: 'sheet1'},{name: 'sheet2'}]} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
+          { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={embedModeHandler} /> : null }
+          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} /> : null }
           </div>
         </Tabs>
         <div>
