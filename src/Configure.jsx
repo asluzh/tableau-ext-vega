@@ -10,6 +10,7 @@ import './Configure.css'
 
 export default function Configure(props) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
     selectedSheet: "",
     embedMode: "vega-lite",
@@ -25,6 +26,7 @@ export default function Configure(props) {
     //Initialise Extension
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
       console.debug('[Configure.jsx] Initialize Dialog', openPayload);
+      setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       let selectedSheet = tableau.extensions.settings.get('selectedSheet');
       if (selectedSheet) {
         selectSheetHandler(JSON.parse(selectedSheet));
@@ -106,7 +108,7 @@ export default function Configure(props) {
           tabs={[ { content: 'Select Data' }, { content: 'Vega Options' } ]}
           >
           <div className='configBody'>
-          { selectedTabIndex === 0 ? <SelectSheet sheets={[{name: 'sheet1'},{name: 'sheet2'}]} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
+          { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
           { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={embedModeHandler} /> : null }
           { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} /> : null }
           </div>
