@@ -12,8 +12,8 @@ export default function Configure(props) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [config, changeConfig] = useState({
     selectedSheet: "",
-    jsonSpec: "",
     embedMode: "vega-lite",
+    jsonSpec: "",
   });
 
   useEffect(() => {
@@ -25,6 +25,18 @@ export default function Configure(props) {
     //Initialise Extension
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
       console.debug('[Configure.jsx] Initialize Dialog', openPayload);
+      let selectedSheet = tableau.extensions.settings.get('selectedSheet');
+      if (selectedSheet) {
+        selectSheetHandler(JSON.parse(selectedSheet));
+      }
+      let embedMode = tableau.extensions.settings.get('embedMode');
+      if (embedMode) {
+        embedModeHandler(JSON.parse(embedMode));
+      }
+      let jsonSpec = tableau.extensions.settings.get('jsonSpec');
+      if (jsonSpec) {
+        jsonSpecHandler(JSON.parse(jsonSpec));
+      }
     });
   }, []);
 
@@ -49,36 +61,39 @@ export default function Configure(props) {
     }));
   }
 
-  function saveSettingsHandler() {
-    console.debug('[Configure.jsx] saveSettingsHandler');
-    // const meta = props.meta;
-    // const label = props.label;
-    // const style = props.style;
-    // const filename = props.filename;
-    // props.disableButton(false);
-    // console.log('[Configure.js] saveSettingsHandler - sheets', meta);
-    // setSettings('sheets', meta)
-    //   .then(setSettings('label', label))
-    //   .then(setSettings('style', style))
-    //   .then(setSettings('filename', filename))
-    //   .then(saveSettings())
-    //   .then((savedSettings) => {
-    //     console.log('[Configure.js] Saved Settings', savedSettings);
-    //     props.changeSettings(false);
-    //     let sheetSettings = tableau.extensions.settings.get('selectedSheets');
-    //     if (sheetSettings && sheetSettings != null) {
-    //       const existingSettings = JSON.parse(sheetSettings);
-    //       console.log('[Configure.js] Sheet Settings Updated', existingSettings);
-    //     }
-    //   })
+  function saveSettingsHandler(btn) {
+    console.debug('[Configure.jsx] saveSettingsHandler', btn);
+    tableau.extensions.settings.set('selectedSheet', JSON.stringify(config.selectedSheet));
+    tableau.extensions.settings.set('embedMode', JSON.stringify(config.embedMode));
+    tableau.extensions.settings.set('jsonSpec', JSON.stringify(config.jsonSpec));
+    tableau.extensions.settings.saveAsync().then(() => {
+      console.debug('[Configure.jsx] Settings saved');
+      if (btn.target.name === "save") {
+        tableau.extensions.ui.closeDialog('Save and close');
+      }
+    });
+  }
+
+  function closeHandler(btn) {
+    console.debug('[Configure.jsx] closeHandler', btn);
+    tableau.extensions.ui.closeDialog('Close');
   }
 
   function resetSettingsHandler() {
     console.debug('[Configure.jsx] resetSettingsHandler');
-    // initializeMeta()
-    //   .then(meta => {
-    //     props.updateMeta(meta);
-    //   });
+    let selectedSheet = tableau.extensions.settings.get('selectedSheet');
+    if (selectedSheet) {
+      selectSheetHandler(JSON.parse(selectedSheet));
+    }
+    let embedMode = tableau.extensions.settings.get('embedMode');
+    if (embedMode) {
+      embedModeHandler(JSON.parse(embedMode));
+    }
+    let jsonSpec = tableau.extensions.settings.get('jsonSpec');
+    if (jsonSpec) {
+      jsonSpecHandler(JSON.parse(jsonSpec));
+    }
+    setSelectedTabIndex(0);
   }
 
   return (
@@ -97,8 +112,10 @@ export default function Configure(props) {
           </div>
         </Tabs>
         <div>
-          <Button kind={'outline'} onClick={resetSettingsHandler}>Reset</Button>
-          <Button kind={'primary'} onClick={saveSettingsHandler}>Save Changes</Button>
+          <Button kind="destructive" density="high" onClick={closeHandler} name="close">Close</Button>
+          <Button kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
+          <Button kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
+          <Button kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
         </div>
       </>
   );
