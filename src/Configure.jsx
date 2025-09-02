@@ -25,7 +25,7 @@ export default function Configure() {
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       let selectedSheet = tableau.extensions.settings.get('selectedSheet');
       if (selectedSheet) {
-        selectSheetHandler(JSON.parse(selectedSheet));
+        selectSheetHandler(selectedSheet);
       }
       let embedMode = tableau.extensions.settings.get('embedMode');
       if (embedMode) {
@@ -33,7 +33,7 @@ export default function Configure() {
       }
       let jsonSpec = tableau.extensions.settings.get('jsonSpec');
       if (jsonSpec) {
-        jsonSpecHandler(JSON.parse(jsonSpec));
+        jsonSpecHandler(jsonSpec);
       }
     });
   }, []);
@@ -61,9 +61,9 @@ export default function Configure() {
 
   function saveSettingsHandler(btn) {
     console.debug('[Configure.jsx] saveSettingsHandler', btn);
-    tableau.extensions.settings.set('selectedSheet', JSON.stringify(config.selectedSheet));
+    tableau.extensions.settings.set('selectedSheet', config.selectedSheet);
     tableau.extensions.settings.set('embedMode', config.embedMode);
-    tableau.extensions.settings.set('jsonSpec', JSON.stringify(config.jsonSpec));
+    tableau.extensions.settings.set('jsonSpec', config.jsonSpec);
     tableau.extensions.settings.saveAsync().then(() => {
       console.debug('[Configure.jsx] Settings saved');
       if (btn.target.name === "save") {
@@ -81,7 +81,7 @@ export default function Configure() {
     console.debug('[Configure.jsx] resetSettingsHandler');
     let selectedSheet = tableau.extensions.settings.get('selectedSheet');
     if (selectedSheet) {
-      selectSheetHandler(JSON.parse(selectedSheet));
+      selectSheetHandler(selectedSheet);
     }
     let embedMode = tableau.extensions.settings.get('embedMode');
     if (embedMode) {
@@ -89,7 +89,7 @@ export default function Configure() {
     }
     let jsonSpec = tableau.extensions.settings.get('jsonSpec');
     if (jsonSpec) {
-      jsonSpecHandler(JSON.parse(jsonSpec));
+      jsonSpecHandler(jsonSpec);
     }
     setSelectedTabIndex(0);
   }
