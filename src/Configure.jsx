@@ -8,7 +8,7 @@ import './Configure.css'
 // Declare this so our linter knows that tableau is a global object
 /* global tableau */
 
-export default function Configure(props) {
+export default function Configure() {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
@@ -16,10 +16,6 @@ export default function Configure(props) {
     embedMode: "vega-lite",
     jsonSpec: "",
   });
-
-  useEffect(() => {
-    console.debug('[Configure.jsx] useEffect props changed:', props);
-  }, [props]);
 
   useEffect(() => {
     console.debug('[Configure.jsx] useEffect');
@@ -33,7 +29,7 @@ export default function Configure(props) {
       }
       let embedMode = tableau.extensions.settings.get('embedMode');
       if (embedMode) {
-        embedModeHandler(JSON.parse(embedMode));
+        embedModeHandler(embedMode);
       }
       let jsonSpec = tableau.extensions.settings.get('jsonSpec');
       if (jsonSpec) {
@@ -66,7 +62,7 @@ export default function Configure(props) {
   function saveSettingsHandler(btn) {
     console.debug('[Configure.jsx] saveSettingsHandler', btn);
     tableau.extensions.settings.set('selectedSheet', JSON.stringify(config.selectedSheet));
-    tableau.extensions.settings.set('embedMode', JSON.stringify(config.embedMode));
+    tableau.extensions.settings.set('embedMode', config.embedMode);
     tableau.extensions.settings.set('jsonSpec', JSON.stringify(config.jsonSpec));
     tableau.extensions.settings.saveAsync().then(() => {
       console.debug('[Configure.jsx] Settings saved');
@@ -89,7 +85,7 @@ export default function Configure(props) {
     }
     let embedMode = tableau.extensions.settings.get('embedMode');
     if (embedMode) {
-      embedModeHandler(JSON.parse(embedMode));
+      embedModeHandler(embedMode);
     }
     let jsonSpec = tableau.extensions.settings.get('jsonSpec');
     if (jsonSpec) {
