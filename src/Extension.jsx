@@ -27,14 +27,16 @@ export default function Extension() {
   const ref = useRef(null);
   const vegaEmbed = useRef(null);
   const [data, setData] = useState([]);
-  const [embedMode, setEmbedMode] = useState();
-  const [jsonSpec, setJsonSpec] = useState();
+  const [embedMode, setEmbedMode] = useState(null);
+  const [jsonSpec, setJsonSpec] = useState(null);
 
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
     const updateSettings = async () => {
       let selectedSheet = tableau.extensions.settings.get('selectedSheet');
       console.debug('[Extension.jsx] selectedSheet', selectedSheet);
+      setEmbedMode(tableau.extensions.settings.get('embedMode'));
+      setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
       if (selectedSheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
         const worksheet = worksheets.find(sheet => sheet.name == selectedSheet);
@@ -51,7 +53,7 @@ export default function Extension() {
           // setData(dataTable.data);
           setData([
               { "i-type": "A", "count": 3, "color": "rgb(121, 199, 227)" },
-              { "i-type": "B", "count": 20, "colo¬r": "rgb(26, 49, 119)" },
+              { "i-type": "B", "count": 20, "color": "rgb(26, 49, 119)" },
               { "i-type": "C", "count": 24, "color": "rgb(18, 147, 154)" },
               { "i-type": "D", "count": 6, "color": "rgba(154, 18, 18, 1)" },
             ]);
@@ -62,8 +64,6 @@ export default function Extension() {
           await dataTableReader.releaseAsync();
         }
       }
-      setEmbedMode(tableau.extensions.settings.get('embedMode'));
-      setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
     }
     console.debug('[Extension.jsx] useEffect');
     let unregisterSettingsEventListener = null;
@@ -78,39 +78,46 @@ export default function Extension() {
       console.error('[Extension.jsx] initializeAsync failed:', err.toString());
     });
     return () => {
+      console.debug('[Extension.jsx] useEffect unmount');
       if (unregisterSettingsEventListener) {
         unregisterSettingsEventListener();
         unregisterSettingsEventListener = null;
       }
+      vegaEmbed.current?.finalize();
     };
   }, []);
 
   useEffect(() => {
+    console.debug('[Extension.jsx] useEffect data update');
+    if (data && data.length > 0) {
+      vegaEmbed.current?.view.data("vizdata", data).runAsync();
+    }
+  }, [vegaEmbed, data]);
+
+  useEffect(() => {
     console.debug('[Extension.jsx] useEffect embed settings update');
-    console.debug('[Extension.jsx] embedMode', embedMode);
-    console.debug('[Extension.jsx] jsonSpec', jsonSpec);
-    console.debug('[Extension.jsx] vegaEmbed', vegaEmbed.current);
     const createView = async () => {
       if (ref.current && embedMode && jsonSpec) {
-        if (vegaEmbed.current) {
-          console.debug('[Extension.jsx] re-creating vegaEmbed');
-          vegaEmbed.current.finalize();
-        }
         try {
-          vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+          if (vegaEmbed.current) {
+            if (JSON.stringify(vegaEmbed.current.spec) !== JSON.stringify(jsonSpec) || vegaEmbed.current.embedOptions.mode !== embedMode) {
+              console.debug('[Extension.jsx] old spec', vegaEmbed.current.spec);
+              console.debug('[Extension.jsx] new spec', jsonSpec);
+              console.debug('[Extension.jsx] old mode', vegaEmbed.current.embedOptions.mode);
+              console.debug('[Extension.jsx] new mode', embedMode);
+              await vegaEmbed.current.finalize();
+              vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+            }
+          } else if (!vegaEmbed.current) {
+            vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+          }
         } catch (err) {
           console.error('[Extension.jsx] Error creating view:', err.toString());
         }
       }
-      if (data && data.length > 0) {
-        vegaEmbed.current?.view.data("vizdata", data).runAsync();
-      }
     };
     createView();
-    return () => {
-      vegaEmbed.current?.finalize();
-    };
-  }, [vegaEmbed, embedMode, jsonSpec, data]);
+  }, [vegaEmbed, embedMode, jsonSpec]);
 
   return (
     <div ref={ref} />
