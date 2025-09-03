@@ -16,6 +16,7 @@ export default function Configure() {
     embedMode: "vega-lite",
     jsonSpec: "",
   });
+  const maxSpecLength = 1000;
 
   useEffect(() => {
     console.debug('[Configure.jsx] useEffect');
@@ -59,17 +60,41 @@ export default function Configure() {
     }));
   }
 
+  function validInputs() {
+    if (!config.selectedSheet) {
+      console.debug('[Configure.jsx] selectedSheet empty');
+      return false;
+    }
+    if (!config.embedMode) {
+      console.debug('[Configure.jsx] embedMode empty');
+      return false;
+    }
+    if (!config.jsonSpec.length > maxSpecLength) {
+      console.debug('[Configure.jsx] jsonSpec too long');
+      return false;
+    }
+    try {
+      JSON.parse(config.jsonSpec);
+    } catch (e) {
+      console.debug('[Configure.jsx] invalid jsonSpec', e);
+      return false;
+    }
+    return true;
+  }
+
   function saveSettingsHandler(btn) {
     console.debug('[Configure.jsx] saveSettingsHandler', btn);
     tableau.extensions.settings.set('selectedSheet', config.selectedSheet);
     tableau.extensions.settings.set('embedMode', config.embedMode);
     tableau.extensions.settings.set('jsonSpec', config.jsonSpec);
-    tableau.extensions.settings.saveAsync().then(() => {
-      console.debug('[Configure.jsx] Settings saved');
-      if (btn.target.name === "save") {
-        tableau.extensions.ui.closeDialog('Save and close');
-      }
-    });
+    if (validInputs()) {
+      tableau.extensions.settings.saveAsync().then(() => {
+        console.debug('[Configure.jsx] Settings saved');
+        if (btn.target.name === "save") {
+          tableau.extensions.ui.closeDialog('Save and close');
+        }
+      });
+    }
   }
 
   function closeHandler(btn) {
@@ -92,10 +117,11 @@ export default function Configure() {
       jsonSpecHandler(jsonSpec);
     }
     setSelectedTabIndex(0);
+    // setCounter(prevCounter => prevCounter + 1);
   }
 
   return (
-      <>
+      <div>
         <Tabs
           activation='automatic'
           alignment='left'
@@ -103,18 +129,18 @@ export default function Configure() {
           selectedTabIndex={selectedTabIndex}
           tabs={[ { content: 'Select Data' }, { content: 'Vega Options' } ]}
           >
-          <div className='configBody'>
+          <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
           { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={embedModeHandler} /> : null }
-          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} /> : null }
+          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} maxLength={maxSpecLength} /> : null }
           </div>
         </Tabs>
         <div>
-          <Button kind="destructive" density="high" onClick={closeHandler} name="close">Close</Button>
-          <Button kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
-          <Button kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
-          <Button kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
+          <Button className="actionButton" kind="destructive" density="high" onClick={closeHandler} name="close">Close</Button>
+          <Button className="actionButton" kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
+          <Button className="actionButton" kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
+          <Button className="actionButton" kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
         </div>
-      </>
+      </div>
   );
 }

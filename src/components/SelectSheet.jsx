@@ -21,6 +21,7 @@ export default function SelectSheet(props) {
         label="Select Data Source Sheet"
         value={selectedSheet}
         onChange={handleChange}
+        style={selectedSheet ? {} : { border: '1px solid red' }}
       >
         <option key="" value="">Please select...</option>
         {props.sheets.map((sheet) => (

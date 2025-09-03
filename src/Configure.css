@@ -1,4 +1,13 @@
-.configBody {
-  width: 320px;
-  height: 320px;
+body {
+  font-family: "Benton Sans", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+}
+
+.actionButton {
+  margin: 0 8px;
+}
+
+.configForm {
+  width: 550px;
+  height: 450px;
 }

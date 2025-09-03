@@ -8,7 +8,7 @@ import './Extension.css'
 function configure() {
   console.debug('[Extension.jsx] Opening configure popup');
   const popupUrl = `${window.location.origin}${import.meta.env.BASE_URL}configure.html`;
-  tableau.extensions.ui.displayDialogAsync(popupUrl, null, { height: 500, width: 500 })
+  tableau.extensions.ui.displayDialogAsync(popupUrl, null, { height: 600, width: 600 })
   .then((closePayload) => {
     console.debug('[Extension.jsx] displayDialogAsync was closed with payload:', closePayload);
   })
