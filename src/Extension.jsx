@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useVegaEmbed } from 'react-vega';
+import embed from 'vega-embed';
 import './Extension.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -24,37 +24,16 @@ function configure() {
 }
 
 export default function Extension() {
-  const [data, setData] = useState([]);
   const ref = useRef(null);
-  const embed = useVegaEmbed({
-    ref,
-    spec: {
-      $schema: "https://vega.github.io/schema/vega-lite/v6.json",
-      data: {
-        name: "vizdata"
-      },
-      description: "A simple pie chart with labels.",
-      encoding: {
-        theta: { field: "count", type: "quantitative", stack: true },
-        color: { field: "color", type: "nominal", legend: null, scale: null }
-      },
-      layer: [
-        {
-          mark: { type: "arc", outerRadius: 80 }
-        }
-      ]
-    },
-    // options: {},
-  });
+  const vegaEmbed = useRef(null);
+  const [data, setData] = useState([]);
   const [embedMode, setEmbedMode] = useState();
   const [jsonSpec, setJsonSpec] = useState();
 
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
-    async function update() {
+    const updateSettings = async () => {
       let selectedSheet = tableau.extensions.settings.get('selectedSheet');
-      setEmbedMode(tableau.extensions.settings.get('embedMode'));
-      setJsonSpec(tableau.extensions.settings.get('jsonSpec'));
       console.debug('[Extension.jsx] selectedSheet', selectedSheet);
       if (selectedSheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
@@ -83,15 +62,17 @@ export default function Extension() {
           await dataTableReader.releaseAsync();
         }
       }
+      setEmbedMode(tableau.extensions.settings.get('embedMode'));
+      setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
     }
     console.debug('[Extension.jsx] useEffect');
     let unregisterSettingsEventListener = null;
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
       console.debug('[Extension.jsx] initializeAsync completed');
-      update();
-      unregisterSettingsEventListener = tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, function (settingsEvent) {
+      updateSettings();
+      unregisterSettingsEventListener = tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, (settingsEvent) => {
         console.debug('[Extension.jsx] Settings changed:', settingsEvent);
-        update();
+        updateSettings();
       });
     }, (err) => {
       console.error('[Extension.jsx] initializeAsync failed:', err.toString());
@@ -105,26 +86,31 @@ export default function Extension() {
   }, []);
 
   useEffect(() => {
-    console.debug('[Extension.jsx] useEffect embed data update');
-    console.debug('[Extension.jsx] data', data);
-    console.debug('[Extension.jsx] embed', embed);
-    if (embed && data && data.length > 0) {
-      embed.view.data("vizdata", data).runAsync();
-    }
-  }, [embed, data]);
-
-  useEffect(() => {
     console.debug('[Extension.jsx] useEffect embed settings update');
     console.debug('[Extension.jsx] embedMode', embedMode);
     console.debug('[Extension.jsx] jsonSpec', jsonSpec);
-    console.debug('[Extension.jsx] embed', embed);
-    if (embed && embedMode && jsonSpec) {
-      // embed.finalize();
-      embed.spec = jsonSpec;
-      embed.options = { mode: embedMode };
-      embed.view.runAsync();
-    }
-  }, [embed, embedMode, jsonSpec]);
+    console.debug('[Extension.jsx] vegaEmbed', vegaEmbed.current);
+    const createView = async () => {
+      if (ref.current && embedMode && jsonSpec) {
+        if (vegaEmbed.current) {
+          console.debug('[Extension.jsx] re-creating vegaEmbed');
+          vegaEmbed.current.finalize();
+        }
+        try {
+          vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+        } catch (err) {
+          console.error('[Extension.jsx] Error creating view:', err.toString());
+        }
+      }
+      if (data && data.length > 0) {
+        vegaEmbed.current?.view.data("vizdata", data).runAsync();
+      }
+    };
+    createView();
+    return () => {
+      vegaEmbed.current?.finalize();
+    };
+  }, [vegaEmbed, embedMode, jsonSpec, data]);
 
   return (
     <div ref={ref} />
