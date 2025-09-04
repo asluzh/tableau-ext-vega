@@ -14,9 +14,9 @@ export default function Configure() {
   const [config, changeConfig] = useState({
     selectedSheet: "",
     embedMode: "vega-lite",
-    jsonSpec: "",
+    jsonSpec: "{}",
   });
-  const maxSpecLength = 1000;
+  // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
 
   useEffect(() => {
     console.debug('[Configure.jsx] useEffect');
@@ -58,6 +58,9 @@ export default function Configure() {
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
+    // if (liveUpdates) {
+    //   saveSettingsHandler({ target: { name: 'apply' } });
+    // }
   }
 
   function validInputs() {
@@ -69,10 +72,10 @@ export default function Configure() {
       console.debug('[Configure.jsx] embedMode empty');
       return false;
     }
-    if (!config.jsonSpec.length > maxSpecLength) {
-      console.debug('[Configure.jsx] jsonSpec too long');
-      return false;
-    }
+    // if (!config.jsonSpec.length > maxSpecLength) {
+    //   console.debug('[Configure.jsx] jsonSpec too long');
+    //   return false;
+    // }
     try {
       JSON.parse(config.jsonSpec);
     } catch (e) {
@@ -93,6 +96,8 @@ export default function Configure() {
         if (btn.target.name === "save") {
           tableau.extensions.ui.closeDialog('Save and close');
         }
+      },(err) => {
+        window.alert('Saving settings failed! ' + err.toString());
       });
     }
   }
@@ -132,14 +137,16 @@ export default function Configure() {
           <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
           { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={embedModeHandler} /> : null }
-          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} maxLength={maxSpecLength} /> : null }
+          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} /> : null }
           </div>
+
         </Tabs>
         <div>
           <Button className="actionButton" kind="destructive" density="high" onClick={closeHandler} name="close">Close</Button>
           <Button className="actionButton" kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
           <Button className="actionButton" kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
           <Button className="actionButton" kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
+          {/* <Checkbox style={{ marginLeft: 20 }} checked={liveUpdates} onChange={(e) => setLiveUpdates(e.target.checked)}>Live Updates</Checkbox> */}
         </div>
       </div>
   );
