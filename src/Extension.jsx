@@ -40,26 +40,29 @@ export default function Extension() {
       if (selectedSheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
         const worksheet = worksheets.find(sheet => sheet.name == selectedSheet);
-        console.debug('[Extension.jsx] worksheets', worksheets);
+        // console.debug('[Extension.jsx] worksheets', worksheets);
         if (!worksheet) {
           console.warn('[Extension.jsx] Worksheet not found:', selectedSheet);
-          // setData([]);
+          setData([]);
           return;
         }
         const dataTableReader = await worksheet.getSummaryDataReaderAsync();
         try {
           const dataTable = await dataTableReader.getAllPagesAsync();
-          console.debug('[Extension.jsx] getAllPagesAsync dataTable:', dataTable);
-          // setData(dataTable.data);
-          setData([
-              { "i-type": "A", "count": 3, "color": "rgb(121, 199, 227)" },
-              { "i-type": "B", "count": 20, "color": "rgb(26, 49, 119)" },
-              { "i-type": "C", "count": 24, "color": "rgb(18, 147, 154)" },
-              { "i-type": "D", "count": 6, "color": "rgba(154, 18, 18, 1)" },
-            ]);
+          // console.debug('[Extension.jsx] getAllPagesAsync dataTable:', dataTable);
+          const columns = dataTable.columns.map(col => col.fieldName);
+          const data = dataTable.data.map(row => {
+            const obj = {};
+            row.forEach((cell, idx) => {
+              obj[columns[idx]] = cell.value;
+            });
+            return obj;
+          });
+          // console.debug('[Extension.jsx] getAllPagesAsync processed data:', data);
+          setData(data);
         } catch (err) {
           console.error('[Extension.jsx] getAllPagesAsync failed:', err.toString());
-          // setData([]);
+          setData([]);
         } finally {
           await dataTableReader.releaseAsync();
         }

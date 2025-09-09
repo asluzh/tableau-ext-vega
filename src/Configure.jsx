@@ -58,9 +58,6 @@ export default function Configure() {
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
-    // if (liveUpdates) {
-    //   saveSettingsHandler({ target: { name: 'apply' } });
-    // }
   }
 
   function validInputs() {
@@ -122,7 +119,6 @@ export default function Configure() {
       jsonSpecHandler(jsonSpec);
     }
     setSelectedTabIndex(0);
-    // setCounter(prevCounter => prevCounter + 1);
   }
 
   return (
@@ -146,7 +142,6 @@ export default function Configure() {
           <Button className="actionButton" kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
           <Button className="actionButton" kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
           <Button className="actionButton" kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
-          {/* <Checkbox style={{ marginLeft: 20 }} checked={liveUpdates} onChange={(e) => setLiveUpdates(e.target.checked)}>Live Updates</Checkbox> */}
         </div>
       </div>
   );
