@@ -33,15 +33,20 @@ export default function Extension() {
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
     let unregisterFilterEventListener = null;
+    let unregisterDataChangedListener = null;
     const renderViz = async (worksheet) => {
       console.debug('[Extension.jsx] renderViz', worksheet.name);
       if (unregisterFilterEventListener) {
         unregisterFilterEventListener();
         unregisterFilterEventListener = null;
       }
-      // TODO handle param changes
+      if (unregisterDataChangedListener) {
+        unregisterDataChangedListener();
+        unregisterDataChangedListener = null;
+      }
+      // TODO make event subscription via config options
       const dataTableReader = await worksheet.getSummaryDataReaderAsync();
-      console.debug('[Extension.jsx] getSummaryDataReaderAsync', dataTableReader);
+      // console.debug('[Extension.jsx] getSummaryDataReaderAsync', dataTableReader);
       if (dataTableReader.pageCount > 0) {
         try {
           const dataTable = await dataTableReader.getAllPagesAsync();
@@ -65,7 +70,11 @@ export default function Extension() {
         unregisterFilterEventListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
           console.debug('[Extension.jsx] FilterChanged event');
           renderViz(worksheet);
-        })
+        });
+        unregisterDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, () => {
+          console.debug('[Extension.jsx] SummaryDataChanged event');
+          renderViz(worksheet);
+        });
       } else {
         console.log('[Extension.jsx] Empty data in worksheet:', worksheet.name);
         setData([]);
@@ -107,6 +116,14 @@ export default function Extension() {
         unregisterSettingsEventListener();
         unregisterSettingsEventListener = null;
       }
+      if (unregisterFilterEventListener) {
+        unregisterFilterEventListener();
+        unregisterFilterEventListener = null;
+      }
+      if (unregisterDataChangedListener) {
+        unregisterDataChangedListener();
+        unregisterDataChangedListener = null;
+      }
       vegaEmbed.current?.finalize();
     };
   }, []);
@@ -125,15 +142,16 @@ export default function Extension() {
         try {
           if (vegaEmbed.current) {
             if (JSON.stringify(vegaEmbed.current.spec) !== JSON.stringify(jsonSpec) || vegaEmbed.current.embedOptions.mode !== embedMode) {
-              console.debug('[Extension.jsx] old spec', vegaEmbed.current.spec);
-              console.debug('[Extension.jsx] new spec', jsonSpec);
-              console.debug('[Extension.jsx] old mode', vegaEmbed.current.embedOptions.mode);
-              console.debug('[Extension.jsx] new mode', embedMode);
+              // console.debug('[Extension.jsx] old spec', vegaEmbed.current.spec);
+              // console.debug('[Extension.jsx] new spec', jsonSpec);
+              // console.debug('[Extension.jsx] old mode', vegaEmbed.current.embedOptions.mode);
+              // console.debug('[Extension.jsx] new mode', embedMode);
               await vegaEmbed.current.finalize();
               vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
             }
           } else if (!vegaEmbed.current) {
             vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+            // TODO handle WARN Infinite extent for field "x": [Infinity, -Infinity]
           }
         } catch (err) {
           console.error('[Extension.jsx] Error creating view:', err.toString());
