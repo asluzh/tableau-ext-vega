@@ -39,32 +39,37 @@ export default function Extension() {
         unregisterFilterEventListener();
         unregisterFilterEventListener = null;
       }
-      // TODO handle when no data
       // TODO handle param changes
       const dataTableReader = await worksheet.getSummaryDataReaderAsync();
-      try {
-        const dataTable = await dataTableReader.getAllPagesAsync();
-        // console.debug('[Extension.jsx] getAllPagesAsync dataTable:', dataTable);
-        const columns = dataTable.columns.map(col => col.fieldName);
-        const data = dataTable.data.map(row => {
-          const obj = {};
-          row.forEach((cell, idx) => {
-            obj[columns[idx]] = cell.value;
+      console.debug('[Extension.jsx] getSummaryDataReaderAsync', dataTableReader);
+      if (dataTableReader.pageCount > 0) {
+        try {
+          const dataTable = await dataTableReader.getAllPagesAsync();
+          // console.debug('[Extension.jsx] getAllPagesAsync dataTable:', dataTable);
+          const columns = dataTable.columns.map(col => col.fieldName);
+          const data = dataTable.data.map(row => {
+            const obj = {};
+            row.forEach((cell, idx) => {
+              obj[columns[idx]] = cell.value;
+            });
+            return obj;
           });
-          return obj;
-        });
-        // console.debug('[Extension.jsx] getAllPagesAsync processed data:', data);
-        setData(data);
-      } catch (err) {
-        console.error('[Extension.jsx] getAllPagesAsync failed:', err.toString());
+          // console.debug('[Extension.jsx] getAllPagesAsync processed data:', data);
+          setData(data);
+        } catch (err) {
+          console.error('[Extension.jsx] getAllPagesAsync failed:', err.toString());
+          setData([]);
+        } finally {
+          await dataTableReader.releaseAsync();
+        }
+        unregisterFilterEventListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
+          console.debug('[Extension.jsx] FilterChanged event');
+          renderViz(worksheet);
+        })
+      } else {
+        console.log('[Extension.jsx] Empty data in worksheet:', worksheet.name);
         setData([]);
-      } finally {
-        await dataTableReader.releaseAsync();
       }
-      unregisterFilterEventListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
-        console.debug('[Extension.jsx] FilterChanged event received');
-        renderViz(worksheet);
-      })
     };
     const updateSettings = async () => {
       let selectedSheet = tableau.extensions.settings.get('selectedSheet');
@@ -85,6 +90,7 @@ export default function Extension() {
     }
     console.debug('[Extension.jsx] useEffect');
     let unregisterSettingsEventListener = null;
+    // TODO tableau is not defined, because the script is not loaded yet?
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
       console.debug('[Extension.jsx] initializeAsync completed');
       updateSettings();
