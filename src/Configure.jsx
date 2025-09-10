@@ -8,11 +8,16 @@ import './Configure.css'
 // Declare this so our linter knows that tableau is a global object
 /* global tableau */
 
+const CONFIG_META_VERSION = 1;
+
 export default function Configure() {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
-    selectedSheet: "",
+    metaVersion: CONFIG_META_VERSION,
+    sheet: "",
+    // listenerFilterEvent: true,
+    // listenerDataChanged: true,
     embedMode: "vega-lite",
     jsonSpec: "{}",
   });
@@ -24,45 +29,53 @@ export default function Configure() {
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
       console.debug('[Configure.jsx] Initialize Dialog', openPayload);
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
-      let selectedSheet = tableau.extensions.settings.get('selectedSheet');
-      if (selectedSheet) {
-        selectSheetHandler(selectedSheet);
-      }
-      let embedMode = tableau.extensions.settings.get('embedMode');
-      if (embedMode) {
-        embedModeHandler(embedMode);
-      }
-      let jsonSpec = tableau.extensions.settings.get('jsonSpec');
-      if (jsonSpec) {
-        jsonSpecHandler(jsonSpec);
+      let metaVersion = parseInt(tableau.extensions.settings.get('metaVersion'));
+      console.debug('[Configure.jsx] meta version', metaVersion);
+      if (metaVersion > CONFIG_META_VERSION) {
+        console.error('[Configure.jsx] newer meta version detected in settings!')
+      } else if (metaVersion < CONFIG_META_VERSION) {
+        console.log('[Configure.jsx] older meta version detected in settings, ignoring config')
+      } else {
+        let sheet = tableau.extensions.settings.get('sheet');
+        if (sheet) {
+          updateSheet(sheet);
+        }
+        let embedMode = tableau.extensions.settings.get('embedMode');
+        if (embedMode) {
+          updateEmbedMode(embedMode);
+        }
+        let jsonSpec = tableau.extensions.settings.get('jsonSpec');
+        if (jsonSpec) {
+          updateJsonSpec(jsonSpec);
+        }
       }
     });
   }, []);
 
-  function selectSheetHandler(name) {
-    console.debug('[Configure.jsx] selectSheetHandler', name);
+  function updateSheet(name) {
+    console.debug('[Configure.jsx] updateSheet', name);
     changeConfig(prevConfig => ({...prevConfig,
-      selectedSheet: name
+      sheet: name
     }));
   }
 
-  function embedModeHandler(mode) {
-    console.debug('[Configure.jsx] embedModeHandler', mode);
+  function updateEmbedMode(mode) {
+    console.debug('[Configure.jsx] updateEmbedMode', mode);
     changeConfig(prevConfig => ({...prevConfig,
       embedMode: mode
     }));
   }
 
-  function jsonSpecHandler(spec) {
-    console.debug('[Configure.jsx] jsonSpecHandler', spec);
+  function updateJsonSpec(spec) {
+    console.debug('[Configure.jsx] updateJsonSpec', spec);
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
   }
 
   function validInputs() {
-    if (!config.selectedSheet) {
-      console.debug('[Configure.jsx] selectedSheet empty');
+    if (!config.sheet) {
+      console.debug('[Configure.jsx] sheet empty');
       return false;
     }
     if (!config.embedMode) {
@@ -82,9 +95,10 @@ export default function Configure() {
     return true;
   }
 
-  function saveSettingsHandler(btn) {
-    console.debug('[Configure.jsx] saveSettingsHandler', btn);
-    tableau.extensions.settings.set('selectedSheet', config.selectedSheet);
+  function saveSettings(btn) {
+    console.debug('[Configure.jsx] saveSettings', btn);
+    tableau.extensions.settings.set('metaVersion', config.metaVersion);
+    tableau.extensions.settings.set('sheet', config.sheet);
     tableau.extensions.settings.set('embedMode', config.embedMode);
     tableau.extensions.settings.set('jsonSpec', config.jsonSpec);
     if (validInputs()) {
@@ -99,24 +113,24 @@ export default function Configure() {
     }
   }
 
-  function closeHandler(btn) {
-    console.debug('[Configure.jsx] closeHandler', btn);
+  function closeSettings(btn) {
+    console.debug('[Configure.jsx] closeSettings', btn);
     tableau.extensions.ui.closeDialog('Close');
   }
 
-  function resetSettingsHandler() {
-    console.debug('[Configure.jsx] resetSettingsHandler');
-    let selectedSheet = tableau.extensions.settings.get('selectedSheet');
-    if (selectedSheet) {
-      selectSheetHandler(selectedSheet);
+  function resetSettings() {
+    console.debug('[Configure.jsx] resetSettings');
+    let sheet = tableau.extensions.settings.get('sheet');
+    if (sheet) {
+      updateSheet(sheet);
     }
     let embedMode = tableau.extensions.settings.get('embedMode');
     if (embedMode) {
-      embedModeHandler(embedMode);
+      updateEmbedMode(embedMode);
     }
     let jsonSpec = tableau.extensions.settings.get('jsonSpec');
     if (jsonSpec) {
-      jsonSpecHandler(jsonSpec);
+      updateJsonSpec(jsonSpec);
     }
     setSelectedTabIndex(0);
   }
@@ -131,17 +145,17 @@ export default function Configure() {
           tabs={[ { content: 'Select Data' }, { content: 'Vega Options' } ]}
           >
           <div className='configForm'>
-          { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} selectedSheet={config.selectedSheet} updateSheet={selectSheetHandler} /> : null }
-          { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={embedModeHandler} /> : null }
-          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={jsonSpecHandler} /> : null }
+          { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
+          { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={updateEmbedMode} /> : null }
+          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
           </div>
 
         </Tabs>
         <div>
-          <Button className="actionButton" kind="destructive" density="high" onClick={closeHandler} name="close">Close</Button>
-          <Button className="actionButton" kind="outline" density="high" onClick={resetSettingsHandler} name="reset">Reset</Button>
-          <Button className="actionButton" kind="outline" density="high" onClick={saveSettingsHandler} name="apply">Apply</Button>
-          <Button className="actionButton" kind="primary" density="high" onClick={saveSettingsHandler} name="save">Apply & Close</Button>
+          <Button className="actionButton" kind="destructive" density="high" onClick={closeSettings} name="close">Close</Button>
+          <Button className="actionButton" kind="outline" density="high" onClick={resetSettings} name="reset">Reset</Button>
+          <Button className="actionButton" kind="outline" density="high" onClick={saveSettings} name="apply">Apply</Button>
+          <Button className="actionButton" kind="primary" density="high" onClick={saveSettings} name="save">Apply & Close</Button>
         </div>
       </div>
   );
