@@ -20,8 +20,8 @@
     "vega-lite": "^6.2.0"
   },
   "devDependencies": {
-    "@tableau/extensions-api-types": "^1.14.0",
     "@eslint/js": "^9.33.0",
+    "@tableau/extensions-api-types": "^1.14.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",

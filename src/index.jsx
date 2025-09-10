@@ -7,7 +7,7 @@ import { StrictMode } from 'react';
 // console.debug('Vite base path is ' + import.meta.env.BASE_URL);
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+<StrictMode>
   <Extension />
-  </StrictMode>
+</StrictMode>
 );
