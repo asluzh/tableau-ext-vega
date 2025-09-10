@@ -15,8 +15,9 @@ export default function Configure() {
   const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
     sheet: "",
-    listenerFilterEvent: true,
+    listenerFilterEvent: false,
     listenerDataChanged: true,
+    listenerDashboardLayout: false,
     embedMode: "vega-lite",
     jsonSpec: "{}",
   });
@@ -31,76 +32,88 @@ export default function Configure() {
       let metaVersion = parseInt(tableau.extensions.settings.get('metaVersion'));
       console.debug('[Configure.jsx] saved meta version', metaVersion);
       if (metaVersion > CONFIG_META_VERSION) {
-        console.error('[Configure.jsx] newer meta version detected in settings!')
-      } else if (metaVersion < CONFIG_META_VERSION) {
-        console.log('[Configure.jsx] older meta version detected in settings, ignoring config')
-      } else {
-        let sheet = tableau.extensions.settings.get('sheet');
-        if (sheet) {
-          updateSheet(sheet);
-        }
-        let listenerFilterEvent = tableau.extensions.settings.get('listenerFilterEvent');
-        if (listenerFilterEvent) {
-          updateListenerFilterEvent(listenerFilterEvent === 'true');
-        }
-        let listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
-        if (listenerDataChanged) {
-          updateListenerDataChanged(listenerDataChanged === 'true');
-        }
-        let embedMode = tableau.extensions.settings.get('embedMode');
-        if (embedMode) {
-          updateEmbedMode(embedMode);
-        }
-        let jsonSpec = tableau.extensions.settings.get('jsonSpec');
-        if (jsonSpec) {
-          updateJsonSpec(jsonSpec);
-        }
+        console.warn('[Configure.jsx] newer meta version detected in settings!')
+        return;
+      }
+      if (metaVersion < CONFIG_META_VERSION) {
+        console.log('[Configure.jsx] older meta version detected in saved settings, some settings may not be available');
+      }
+      let sheet = tableau.extensions.settings.get('sheet');
+      if (sheet) {
+        updateSheet(sheet);
+      }
+      let listenerFilterEvent = tableau.extensions.settings.get('listenerFilterEvent');
+      if (listenerFilterEvent) {
+        updateListenerFilterEvent(listenerFilterEvent === 'true');
+      }
+      let listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
+      if (listenerDataChanged) {
+        updateListenerDataChanged(listenerDataChanged === 'true');
+      }
+      let listenerDashboardLayout = tableau.extensions.settings.get('listenerDashboardLayout');
+      if (listenerDashboardLayout) {
+        updateListenerDashboardLayout(listenerDashboardLayout === 'true');
+      }
+      let embedMode = tableau.extensions.settings.get('embedMode');
+      if (embedMode) {
+        updateEmbedMode(embedMode);
+      }
+      let jsonSpec = tableau.extensions.settings.get('jsonSpec');
+      if (jsonSpec) {
+        updateJsonSpec(jsonSpec);
       }
     });
   }, []);
 
   function updateSheet(name) {
-    console.debug('[Configure.jsx] updateSheet', name);
+    // console.debug('[Configure.jsx] updateSheet', name);
     changeConfig(prevConfig => ({...prevConfig,
       sheet: name
     }));
   }
 
   function updateEmbedMode(mode) {
-    console.debug('[Configure.jsx] updateEmbedMode', mode);
+    // console.debug('[Configure.jsx] updateEmbedMode', mode);
     changeConfig(prevConfig => ({...prevConfig,
       embedMode: mode
     }));
   }
 
   function updateJsonSpec(spec) {
-    console.debug('[Configure.jsx] updateJsonSpec', spec);
+    // console.debug('[Configure.jsx] updateJsonSpec', spec);
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
   }
 
   function updateListenerFilterEvent(checked) {
-    console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
+    // console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerFilterEvent: checked
     }));
   }
 
   function updateListenerDataChanged(checked) {
-    console.debug('[Configure.jsx] updateListenerDataChanged', checked);
+    // console.debug('[Configure.jsx] updateListenerDataChanged', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDataChanged: checked
     }));
   }
 
+  function updateListenerDashboardLayout(checked) {
+    // console.debug('[Configure.jsx] updateListenerDashboardLayout', checked);
+    changeConfig(prevConfig => ({...prevConfig,
+      listenerDashboardLayout: checked
+    }));
+  }
+
   function validInputs() {
     if (!config.sheet) {
-      console.debug('[Configure.jsx] sheet empty');
+      console.warn('[Configure.jsx] sheet empty');
       return false;
     }
     if (!config.embedMode) {
-      console.debug('[Configure.jsx] embedMode empty');
+      console.warn('[Configure.jsx] embedMode empty');
       return false;
     }
     // if (!config.jsonSpec.length > maxSpecLength) {
@@ -110,7 +123,7 @@ export default function Configure() {
     try {
       JSON.parse(config.jsonSpec);
     } catch (e) {
-      console.debug('[Configure.jsx] invalid jsonSpec', e);
+      console.warn('[Configure.jsx] invalid jsonSpec', e);
       return false;
     }
     return true;
@@ -118,13 +131,12 @@ export default function Configure() {
 
   function saveSettings(e) {
     console.debug('[Configure.jsx] saveSettings', e);
-    tableau.extensions.settings.set('metaVersion', CONFIG_META_VERSION);
-    tableau.extensions.settings.set('sheet', config.sheet);
-    tableau.extensions.settings.set('listenerFilterEvent', config.listenerFilterEvent);
-    tableau.extensions.settings.set('listenerDataChanged', config.listenerDataChanged);
-    tableau.extensions.settings.set('embedMode', config.embedMode);
-    tableau.extensions.settings.set('jsonSpec', config.jsonSpec);
-    if (validInputs()) {
+    if (validInputs() && tableau.extensions.environment.mode === "authoring") {
+      tableau.extensions.settings.set('metaVersion', CONFIG_META_VERSION);
+      // iterate through config object and save each key/value pair
+      Object.entries(config).forEach(([key, value]) => {
+        tableau.extensions.settings.set(key, value);
+      });
       tableau.extensions.settings.saveAsync().then(() => {
         console.debug('[Configure.jsx] Settings saved');
         if (e.target.name === "save") {
@@ -155,6 +167,10 @@ export default function Configure() {
     if (listenerDataChanged) {
       updateListenerDataChanged(listenerDataChanged === 'true');
     }
+    let listenerDashboardLayout = tableau.extensions.settings.get('listenerDashboardLayout');
+    if (listenerDashboardLayout) {
+      updateListenerDashboardLayout(listenerDashboardLayout === 'true');
+    }
     let embedMode = tableau.extensions.settings.get('embedMode');
     if (embedMode) {
       updateEmbedMode(embedMode);
@@ -177,8 +193,9 @@ export default function Configure() {
           >
           <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
-          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>Filter Changed Event Listener</ToggleSwitch></div> : null }
-          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>Summary Data Changed Listener</ToggleSwitch></div> : null }
+          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>FilterChanged Listener</ToggleSwitch></div> : null }
+          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>SummaryDataChanged Listener</ToggleSwitch></div> : null }
+          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDashboardLayout} onChange={e => updateListenerDashboardLayout(e.target.checked)}>DashboardLayoutChanged Listener</ToggleSwitch></div> : null }
           { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={updateEmbedMode} /> : null }
           { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
           </div>
