@@ -29,9 +29,13 @@ export default function Extension() {
   const [data, setData] = useState([]);
   const [embedMode, setEmbedMode] = useState(null);
   const [jsonSpec, setJsonSpec] = useState(null);
+  // const [listenerFilterEvent, setListenerFilterEvent] = useState(false);
+  // const [listenerDataChanged, setListenerDataChanged] = useState(false);
 
   // TODO useEffect is called twice, because of React.StrictMode?
   useEffect(() => {
+    let listenerFilterEvent = false;
+    let listenerDataChanged = false;
     let unregisterFilterEventListener = null;
     let unregisterDataChangedListener = null;
     const renderViz = async (worksheet) => {
@@ -44,7 +48,6 @@ export default function Extension() {
         unregisterDataChangedListener();
         unregisterDataChangedListener = null;
       }
-      // TODO make event subscription via config options
       const dataTableReader = await worksheet.getSummaryDataReaderAsync();
       // console.debug('[Extension.jsx] getSummaryDataReaderAsync', dataTableReader);
       if (dataTableReader.pageCount > 0) {
@@ -67,30 +70,36 @@ export default function Extension() {
         } finally {
           await dataTableReader.releaseAsync();
         }
-        unregisterFilterEventListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
-          console.debug('[Extension.jsx] FilterChanged event');
-          renderViz(worksheet);
-        });
-        unregisterDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, () => {
-          console.debug('[Extension.jsx] SummaryDataChanged event');
-          renderViz(worksheet);
-        });
+        if (listenerFilterEvent) {
+          unregisterFilterEventListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
+            console.debug('[Extension.jsx] FilterChanged event');
+            renderViz(worksheet);
+          });
+        }
+        if (listenerDataChanged) {
+          unregisterDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, () => {
+            console.debug('[Extension.jsx] SummaryDataChanged event');
+            renderViz(worksheet);
+          });
+        }
       } else {
         console.log('[Extension.jsx] Empty data in worksheet:', worksheet.name);
         setData([]);
       }
     };
     const updateSettings = async () => {
-      let selectedSheet = tableau.extensions.settings.get('selectedSheet');
-      console.debug('[Extension.jsx] selectedSheet', selectedSheet);
+      let sheet = tableau.extensions.settings.get('sheet');
+      console.debug('[Extension.jsx] data sheet', sheet);
       setEmbedMode(tableau.extensions.settings.get('embedMode'));
       setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
-      if (selectedSheet) {
+      listenerFilterEvent = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
+      listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
+      if (sheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-        const worksheet = worksheets.find(sheet => sheet.name == selectedSheet);
+        const worksheet = worksheets.find(s => s.name == sheet);
         // console.debug('[Extension.jsx] worksheets', worksheets);
         if (!worksheet) {
-          console.warn('[Extension.jsx] Worksheet not found:', selectedSheet);
+          console.warn('[Extension.jsx] Worksheet not found:', sheet);
           setData([]);
           return;
         }

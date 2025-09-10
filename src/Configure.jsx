@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Tabs, Button } from '@tableau/tableau-ui';
+import { Tabs, Button, ToggleSwitch } from '@tableau/tableau-ui';
 import SelectSheet from './components/SelectSheet';
 import JsonSpec from './components/JsonSpec';
 import EmbedOptions from './components/EmbedOptions';
@@ -14,10 +14,9 @@ export default function Configure() {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
-    metaVersion: CONFIG_META_VERSION,
     sheet: "",
-    // listenerFilterEvent: true,
-    // listenerDataChanged: true,
+    listenerFilterEvent: true,
+    listenerDataChanged: true,
     embedMode: "vega-lite",
     jsonSpec: "{}",
   });
@@ -30,7 +29,7 @@ export default function Configure() {
       console.debug('[Configure.jsx] Initialize Dialog', openPayload);
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       let metaVersion = parseInt(tableau.extensions.settings.get('metaVersion'));
-      console.debug('[Configure.jsx] meta version', metaVersion);
+      console.debug('[Configure.jsx] saved meta version', metaVersion);
       if (metaVersion > CONFIG_META_VERSION) {
         console.error('[Configure.jsx] newer meta version detected in settings!')
       } else if (metaVersion < CONFIG_META_VERSION) {
@@ -39,6 +38,14 @@ export default function Configure() {
         let sheet = tableau.extensions.settings.get('sheet');
         if (sheet) {
           updateSheet(sheet);
+        }
+        let listenerFilterEvent = tableau.extensions.settings.get('listenerFilterEvent');
+        if (listenerFilterEvent) {
+          updateListenerFilterEvent(listenerFilterEvent === 'true');
+        }
+        let listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
+        if (listenerDataChanged) {
+          updateListenerDataChanged(listenerDataChanged === 'true');
         }
         let embedMode = tableau.extensions.settings.get('embedMode');
         if (embedMode) {
@@ -73,6 +80,20 @@ export default function Configure() {
     }));
   }
 
+  function updateListenerFilterEvent(checked) {
+    console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
+    changeConfig(prevConfig => ({...prevConfig,
+      listenerFilterEvent: checked
+    }));
+  }
+
+  function updateListenerDataChanged(checked) {
+    console.debug('[Configure.jsx] updateListenerDataChanged', checked);
+    changeConfig(prevConfig => ({...prevConfig,
+      listenerDataChanged: checked
+    }));
+  }
+
   function validInputs() {
     if (!config.sheet) {
       console.debug('[Configure.jsx] sheet empty');
@@ -95,16 +116,18 @@ export default function Configure() {
     return true;
   }
 
-  function saveSettings(btn) {
-    console.debug('[Configure.jsx] saveSettings', btn);
-    tableau.extensions.settings.set('metaVersion', config.metaVersion);
+  function saveSettings(e) {
+    console.debug('[Configure.jsx] saveSettings', e);
+    tableau.extensions.settings.set('metaVersion', CONFIG_META_VERSION);
     tableau.extensions.settings.set('sheet', config.sheet);
+    tableau.extensions.settings.set('listenerFilterEvent', config.listenerFilterEvent);
+    tableau.extensions.settings.set('listenerDataChanged', config.listenerDataChanged);
     tableau.extensions.settings.set('embedMode', config.embedMode);
     tableau.extensions.settings.set('jsonSpec', config.jsonSpec);
     if (validInputs()) {
       tableau.extensions.settings.saveAsync().then(() => {
         console.debug('[Configure.jsx] Settings saved');
-        if (btn.target.name === "save") {
+        if (e.target.name === "save") {
           tableau.extensions.ui.closeDialog('Save and close');
         }
       },(err) => {
@@ -113,16 +136,24 @@ export default function Configure() {
     }
   }
 
-  function closeSettings(btn) {
-    console.debug('[Configure.jsx] closeSettings', btn);
+  function closeSettings(e) {
+    console.debug('[Configure.jsx] closeSettings', e);
     tableau.extensions.ui.closeDialog('Close');
   }
 
-  function resetSettings() {
-    console.debug('[Configure.jsx] resetSettings');
+  function resetSettings(e) {
+    console.debug('[Configure.jsx] resetSettings', e);
     let sheet = tableau.extensions.settings.get('sheet');
     if (sheet) {
       updateSheet(sheet);
+    }
+    let listenerFilterEvent = tableau.extensions.settings.get('listenerFilterEvent');
+    if (listenerFilterEvent) {
+      updateListenerFilterEvent(listenerFilterEvent === 'true');
+    }
+    let listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
+    if (listenerDataChanged) {
+      updateListenerDataChanged(listenerDataChanged === 'true');
     }
     let embedMode = tableau.extensions.settings.get('embedMode');
     if (embedMode) {
@@ -146,6 +177,8 @@ export default function Configure() {
           >
           <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
+          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>Filter Changed Event Listener</ToggleSwitch></div> : null }
+          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>Summary Data Changed Listener</ToggleSwitch></div> : null }
           { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={updateEmbedMode} /> : null }
           { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
           </div>
