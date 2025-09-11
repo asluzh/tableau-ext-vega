@@ -99,6 +99,7 @@ export default function Extension() {
           console.debug('[Extension.jsx] added DashboardLayoutChanged event listener');
           unregisterDashboardLayoutChangedListener = worksheet.parentDashboard.addEventListener(tableau.TableauEventType.DashboardLayoutChanged, () => {
             console.debug('[Extension.jsx] DashboardLayoutChanged event');
+            // TODO what could be updated here - view size?
             // vegaEmbed.current.view.width = 400; // window.innerWidth * 0.8;
             // vegaEmbed.current.view.height = 500; // window.innerHeight * 0.8;
             // vegaEmbed.current.view.runAsync();
@@ -229,6 +230,10 @@ export default function Extension() {
   }, [vegaEmbed, embedOptions, jsonSpec]);
 
   return (
-    <div style={{ width: "100%", height: "100%", border: "1px dashed lightGrey" }} ref={ref} />
+    <div style={{
+      width: "100vw",
+      height: "calc(100vh - 4px)",
+      border: "1px dashed lightgray"
+    }} ref={ref} />
   )
 }
