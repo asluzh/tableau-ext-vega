@@ -4,6 +4,7 @@ import SelectSheet from './components/SelectSheet';
 import JsonSpec from './components/JsonSpec';
 import EmbedOptions from './components/EmbedOptions';
 import StylingOptions from './components/StylingOptions';
+import JSON5 from 'json5'
 import './Configure.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -126,13 +127,13 @@ export default function Configure() {
       return false;
     }
     try {
-      JSON.parse(config.embedOptions);
+      JSON5.parse(config.embedOptions);
     } catch (e) {
       console.warn('[Configure.jsx] invalid embedOptions', e);
       return false;
     }
     try {
-      JSON.parse(config.jsonSpec);
+      JSON5.parse(config.jsonSpec);
     } catch (e) {
       console.warn('[Configure.jsx] invalid jsonSpec', e);
       return false;

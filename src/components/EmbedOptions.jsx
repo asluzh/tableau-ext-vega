@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react'
 import { TextArea, Button } from '@tableau/tableau-ui';
-import StringToJson from '../helpers/StringToJson';
+import JSON5 from 'json5'
 
 export default function EmbedOptions(props) {
   const [embedOptions, setEmbedOptions] = useState(props.options);
   const parsingMessage = useMemo(() => {
     try {
-      JSON.parse(embedOptions);
+      JSON5.parse(embedOptions);
     } catch (e) {
-      return (`Invalid JSON input: ${e.message}`);
+      return (`Invalid input: ${e.message}`);
     }
-    return "Valid JSON input";
+    return "Valid input";
   }, [embedOptions]);
 
   function handleChange(event) {
@@ -18,15 +18,19 @@ export default function EmbedOptions(props) {
     props.updateEmbedOptions(event.target.value);
   }
 
-  async function formatJson() {
+  async function formatJson(btn) {
     try {
-      let parsed = JSON.parse(embedOptions);
-      console.log(StringToJson(embedOptions));
-      let formatted = JSON.stringify(parsed, null, 4);
+      let parsed = JSON5.parse(embedOptions);
+      let formatted = null;
+      if (btn.target.name === "json5") {
+        formatted = JSON5.stringify(parsed, null, 4);
+      } else {
+        formatted = JSON.stringify(parsed, null, 4);
+      }
       setEmbedOptions(formatted);
-      props.updateJsonSpec(formatted);
+      props.updateEmbedOptions(formatted);
     } catch (e) {
-      return (`Error in JSON: ${e.message}`);
+      console.error("Error in JSON:", e.message);
     }
   }
 
@@ -37,11 +41,12 @@ export default function EmbedOptions(props) {
         label="Vega-Embed Options"
         value={embedOptions}
         message={parsingMessage}
-        placeholder="Enter Vega-Embed options here"
+        placeholder="Enter Vega-Embed options here in JSON5 format"
         onChange={handleChange}
-        valid={parsingMessage === "Valid JSON input"}
+        valid={parsingMessage === "Valid input"}
       />
-      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="close">Format JSON</Button>
+      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="json">Format JSON</Button>
+      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="json5">Format JSON5</Button>
     </div>
   );
 }

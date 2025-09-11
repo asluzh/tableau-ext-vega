@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react'
 import { TextArea, Button } from '@tableau/tableau-ui';
-import StringToJson from '../helpers/StringToJson';
+import JSON5 from 'json5'
 
 export default function JsonSpec(props) {
   const [jsonSpec, setJsonSpec] = useState(props.spec);
   const parsingMessage = useMemo(() => {
     try {
-      JSON.parse(jsonSpec);
+      JSON5.parse(jsonSpec);
     } catch (e) {
-      return (`Invalid JSON input: ${e.message}`);
+      return (`Invalid input: ${e.message}`);
     }
-    return "Valid JSON input";
+    return "Valid input";
   }, [jsonSpec]);
 
   function handleChange(event) {
@@ -18,15 +18,19 @@ export default function JsonSpec(props) {
     props.updateJsonSpec(event.target.value);
   }
 
-  async function formatJson() {
+  async function formatJson(btn) {
     try {
-      let parsed = JSON.parse(jsonSpec);
-      console.log(StringToJson(jsonSpec));
-      let formatted = JSON.stringify(parsed, null, 4);
+      let parsed = JSON5.parse(jsonSpec);
+      let formatted = null;
+      if (btn.target.name === "json5") {
+        formatted = JSON5.stringify(parsed, null, 4);
+      } else {
+        formatted = JSON.stringify(parsed, null, 4);
+      }
       setJsonSpec(formatted);
       props.updateJsonSpec(formatted);
     } catch (e) {
-      return (`Error in JSON: ${e.message}`);
+      console.error("Error in JSON:", e.message);
     }
   }
 
@@ -34,14 +38,15 @@ export default function JsonSpec(props) {
     <div style={{ marginTop: 20, marginBottom: 20 }}>
       <TextArea
         style={{ width: '550px', height: '350px' }}
-        label="Vega/Vega-Lite JSON Specification"
+        label="Vega/Vega-Lite Specification"
         value={jsonSpec}
         message={parsingMessage}
-        placeholder="Enter your Vega or Vega-Lite JSON specification here"
+        placeholder="Enter your Vega or Vega-Lite specification here in JSON5 format"
         onChange={handleChange}
-        valid={parsingMessage === "Valid JSON input"}
+        valid={parsingMessage === "Valid input"}
       />
-      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="close">Format JSON</Button>
+      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="json">Format JSON</Button>
+      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="json5">Format JSON5</Button>
     </div>
   );
 }

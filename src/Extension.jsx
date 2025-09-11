@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import embed from 'vega-embed';
+import JSON5 from 'json5'
 import './Extension.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -111,8 +112,8 @@ export default function Extension() {
     const updateSettings = async () => {
       let sheet = tableau.extensions.settings.get('sheet');
       console.debug('[Extension.jsx] data sheet', sheet);
-      setEmbedOptions(JSON.parse(tableau.extensions.settings.get('embedOptions')));
-      setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
+      setEmbedOptions(JSON5.parse(tableau.extensions.settings.get('embedOptions')));
+      setJsonSpec(JSON5.parse(tableau.extensions.settings.get('jsonSpec')));
       listenerFilterChanged = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
       listenerSummaryDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
       listenerDashboardLayoutChanged = tableau.extensions.settings.get('listenerDashboardLayout') === 'true';
@@ -207,12 +208,12 @@ export default function Extension() {
       if (ref.current && embedOptions && jsonSpec) {
         try {
           if (vegaEmbed.current) {
-            if (JSON.stringify(vegaEmbed.current.spec) !== JSON.stringify(jsonSpec)) {
+            if (JSON5.stringify(vegaEmbed.current.spec) !== JSON5.stringify(jsonSpec)) {
               console.debug('[Extension.jsx] new spec received, re-embedding');
               await vegaEmbed.current.finalize();
               vegaEmbed.current = await embed(ref.current, jsonSpec, embedOptions);
             }
-            if (JSON.stringify(vegaEmbed.current.embedOptions) !== JSON.stringify(embedOptions)) {
+            if (JSON5.stringify(vegaEmbed.current.embedOptions) !== JSON5.stringify(embedOptions)) {
               console.debug('[Extension.jsx] new options received, re-embedding');
               console.debug('[Extension.jsx] old options:', vegaEmbed.current.embedOptions);
               console.debug('[Extension.jsx] new options:', embedOptions);
