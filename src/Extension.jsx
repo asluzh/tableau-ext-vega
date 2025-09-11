@@ -27,7 +27,7 @@ export default function Extension() {
   const ref = useRef(null);
   const vegaEmbed = useRef(null);
   const [data, setData] = useState([]);
-  const [embedMode, setEmbedMode] = useState(null);
+  const [embedOptions, setEmbedOptions] = useState(null);
   const [jsonSpec, setJsonSpec] = useState(null);
 
   useEffect(() => {
@@ -90,7 +90,10 @@ export default function Extension() {
           console.debug('[Extension.jsx] added DashboardLayoutChanged event listener');
           unregisterDashboardLayoutChangedListener = worksheet.parentDashboard.addEventListener(tableau.TableauEventType.DashboardLayoutChanged, () => {
             console.debug('[Extension.jsx] DashboardLayoutChanged event');
-            updateData(worksheet);
+            // vegaEmbed.current.view.width = 400; // window.innerWidth * 0.8;
+            // vegaEmbed.current.view.height = 500; // window.innerHeight * 0.8;
+            // vegaEmbed.current.view.runAsync();
+            // updateData(worksheet);
           });
         }
       } else {
@@ -102,26 +105,29 @@ export default function Extension() {
     const updateSettings = async () => {
       let sheet = tableau.extensions.settings.get('sheet');
       console.debug('[Extension.jsx] data sheet', sheet);
-      setEmbedMode(tableau.extensions.settings.get('embedMode'));
+      setEmbedOptions(JSON.parse(tableau.extensions.settings.get('embedOptions')));
       setJsonSpec(JSON.parse(tableau.extensions.settings.get('jsonSpec')));
       listenerFilterChanged = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
       listenerSummaryDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
       listenerDashboardLayoutChanged = tableau.extensions.settings.get('listenerDashboardLayout') === 'true';
       // DashboardLayoutChanged event is always useful in authoring mode, so enable it automatically
-      if (tableau.extensions.environment.mode === "authoring") {
-        listenerDashboardLayoutChanged = true;
-      }
+      // if (tableau.extensions.environment.mode === "authoring") {
+      //   listenerDashboardLayoutChanged = true;
+      // }
       if (unregisterFilterChangedListener) {
         unregisterFilterChangedListener();
         unregisterFilterChangedListener = null;
+        console.debug('[Extension.jsx] removed FilterChanged event listener');
       }
       if (unregisterSummaryDataChangedListener) {
         unregisterSummaryDataChangedListener();
         unregisterSummaryDataChangedListener = null;
+        console.debug('[Extension.jsx] removed SummaryDataChanged event listener');
       }
       if (unregisterDashboardLayoutChangedListener) {
         unregisterDashboardLayoutChangedListener();
         unregisterDashboardLayoutChangedListener = null;
+        console.debug('[Extension.jsx] removed DashboardLayoutChanged event listener');
       }
       if (sheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
@@ -189,17 +195,24 @@ export default function Extension() {
   useEffect(() => {
     console.debug('[Extension.jsx] useEffect embed settings update');
     const createView = async () => {
-      if (ref.current && embedMode && jsonSpec) {
+      if (ref.current && embedOptions && jsonSpec) {
         try {
           if (vegaEmbed.current) {
-            if (JSON.stringify(vegaEmbed.current.spec) !== JSON.stringify(jsonSpec) || vegaEmbed.current.embedOptions.mode !== embedMode) {
-              console.debug('[Extension.jsx] new spec/mode received, re-embedding');
+            if (JSON.stringify(vegaEmbed.current.spec) !== JSON.stringify(jsonSpec)) {
+              console.debug('[Extension.jsx] new spec received, re-embedding');
               await vegaEmbed.current.finalize();
-              vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+              vegaEmbed.current = await embed(ref.current, jsonSpec, embedOptions);
+            }
+            if (JSON.stringify(vegaEmbed.current.embedOptions) !== JSON.stringify(embedOptions)) {
+              console.debug('[Extension.jsx] new options received, re-embedding');
+              console.debug('[Extension.jsx] old options:', vegaEmbed.current.embedOptions);
+              console.debug('[Extension.jsx] new options:', embedOptions);
+              await vegaEmbed.current.finalize();
+              vegaEmbed.current = await embed(ref.current, jsonSpec, embedOptions);
             }
           } else if (!vegaEmbed.current) {
             console.debug('[Extension.jsx] initial embedding');
-            vegaEmbed.current = await embed(ref.current, jsonSpec, { mode: embedMode });
+            vegaEmbed.current = await embed(ref.current, jsonSpec, embedOptions);
             // TODO handle WARN Infinite extent for field "x": [Infinity, -Infinity]
           }
         } catch (err) {
@@ -208,9 +221,9 @@ export default function Extension() {
       }
     };
     createView();
-  }, [vegaEmbed, embedMode, jsonSpec]);
+  }, [vegaEmbed, embedOptions, jsonSpec]);
 
   return (
-    <div ref={ref} />
+    <div style={{ width: "100%", height: "100%", border: "1px dashed lightGrey" }} ref={ref} />
   )
 }

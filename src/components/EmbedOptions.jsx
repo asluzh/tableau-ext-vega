@@ -1,26 +1,47 @@
-import { useState } from 'react'
-import { DropdownSelect } from '@tableau/tableau-ui';
+import { useState, useMemo } from 'react'
+import { TextArea, Button } from '@tableau/tableau-ui';
+import StringToJson from '../helpers/StringToJson';
 
 export default function EmbedOptions(props) {
-  const [embedMode, setEmbedMode] = useState(props.embedMode);
+  const [embedOptions, setEmbedOptions] = useState(props.options);
+  const parsingMessage = useMemo(() => {
+    try {
+      JSON.parse(embedOptions);
+    } catch (e) {
+      return (`Invalid JSON input: ${e.message}`);
+    }
+    return "Valid JSON input";
+  }, [embedOptions]);
 
   function handleChange(event) {
-    setEmbedMode(event.target.value);
-    props.updateEmbedMode(event.target.value);
+    setEmbedOptions(event.target.value);
+    props.updateEmbedOptions(event.target.value);
+  }
+
+  async function formatJson() {
+    try {
+      let parsed = JSON.parse(embedOptions);
+      console.log(StringToJson(embedOptions));
+      let formatted = JSON.stringify(parsed, null, 4);
+      setEmbedOptions(formatted);
+      props.updateJsonSpec(formatted);
+    } catch (e) {
+      return (`Error in JSON: ${e.message}`);
+    }
   }
 
   return (
     <div style={{ marginTop: 20, marginBottom: 20 }}>
-      <DropdownSelect
-        kind='line'
-        label="Embed Mode"
-        value={embedMode}
+      <TextArea
+        style={{ width: '550px', height: '350px' }}
+        label="Vega-Embed Options"
+        value={embedOptions}
+        message={parsingMessage}
+        placeholder="Enter Vega-Embed options here"
         onChange={handleChange}
-        style={{ width: '300px' }}
-      >
-        <option value="vega">Vega</option>
-        <option value="vega-lite">Vega-Lite</option>
-      </DropdownSelect>
+        valid={parsingMessage === "Valid JSON input"}
+      />
+      <Button className="actionButton" kind="outline" density="high" onClick={formatJson} name="close">Format JSON</Button>
     </div>
   );
 }

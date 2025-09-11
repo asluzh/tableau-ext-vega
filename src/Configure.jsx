@@ -18,7 +18,7 @@ export default function Configure() {
     listenerFilterEvent: false,
     listenerDataChanged: true,
     listenerDashboardLayout: false,
-    embedMode: "vega-lite",
+    embedOptions: "{}",
     jsonSpec: "{}",
   });
   // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
@@ -54,9 +54,9 @@ export default function Configure() {
       if (listenerDashboardLayout) {
         updateListenerDashboardLayout(listenerDashboardLayout === 'true');
       }
-      let embedMode = tableau.extensions.settings.get('embedMode');
-      if (embedMode) {
-        updateEmbedMode(embedMode);
+      let embedOptions = tableau.extensions.settings.get('embedOptions');
+      if (embedOptions) {
+        updateEmbedOptions(embedOptions);
       }
       let jsonSpec = tableau.extensions.settings.get('jsonSpec');
       if (jsonSpec) {
@@ -72,10 +72,10 @@ export default function Configure() {
     }));
   }
 
-  function updateEmbedMode(mode) {
-    // console.debug('[Configure.jsx] updateEmbedMode', mode);
+  function updateEmbedOptions(options) {
+    // console.debug('[Configure.jsx] updateEmbedOptions', options);
     changeConfig(prevConfig => ({...prevConfig,
-      embedMode: mode
+      embedOptions: options
     }));
   }
 
@@ -112,14 +112,12 @@ export default function Configure() {
       console.warn('[Configure.jsx] sheet empty');
       return false;
     }
-    if (!config.embedMode) {
-      console.warn('[Configure.jsx] embedMode empty');
+    try {
+      JSON.parse(config.embedOptions);
+    } catch (e) {
+      console.warn('[Configure.jsx] invalid embedOptions', e);
       return false;
     }
-    // if (!config.jsonSpec.length > maxSpecLength) {
-    //   console.debug('[Configure.jsx] jsonSpec too long');
-    //   return false;
-    // }
     try {
       JSON.parse(config.jsonSpec);
     } catch (e) {
@@ -171,9 +169,9 @@ export default function Configure() {
     if (listenerDashboardLayout) {
       updateListenerDashboardLayout(listenerDashboardLayout === 'true');
     }
-    let embedMode = tableau.extensions.settings.get('embedMode');
-    if (embedMode) {
-      updateEmbedMode(embedMode);
+    let embedOptions = tableau.extensions.settings.get('embedOptions');
+    if (embedOptions) {
+      updateEmbedOptions(embedOptions);
     }
     let jsonSpec = tableau.extensions.settings.get('jsonSpec');
     if (jsonSpec) {
@@ -189,15 +187,15 @@ export default function Configure() {
           alignment='left'
           onTabChange={setSelectedTabIndex}
           selectedTabIndex={selectedTabIndex}
-          tabs={[ { content: 'Select Data' }, { content: 'Vega Options' } ]}
+          tabs={[ { content: 'Data Input' }, { content: 'Vega Spec' }, { content: 'Embed Options' } ]}
           >
           <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
           { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>FilterChanged Listener</ToggleSwitch></div> : null }
           { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>SummaryDataChanged Listener</ToggleSwitch></div> : null }
           { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDashboardLayout} onChange={e => updateListenerDashboardLayout(e.target.checked)}>DashboardLayoutChanged Listener</ToggleSwitch></div> : null }
-          { selectedTabIndex === 1 ? <EmbedOptions embedMode={config.embedMode} updateEmbedMode={updateEmbedMode} /> : null }
           { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
+          { selectedTabIndex === 2 ? <EmbedOptions options={config.embedOptions} updateEmbedOptions={updateEmbedOptions} /> : null }
           </div>
 
         </Tabs>
