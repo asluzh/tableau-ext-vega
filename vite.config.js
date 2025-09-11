@@ -20,10 +20,12 @@ export default defineConfig({
       replaceFiles,
       replace: {
         VERSION_NUMBER: packageJson.version,
+        PACKAGE_NAME: packageJson.name,
+        PACKAGE_DESCRIPTION: packageJson.description,
       },
     }),
   ],
-  base: '/tableau-ext-vega/',
+  base: '/'+packageJson.name+'/',
   build: {
     outDir: 'dist',
     rollupOptions: {
