@@ -3,6 +3,7 @@ import { Tabs, Button, ToggleSwitch } from '@tableau/tableau-ui';
 import SelectSheet from './components/SelectSheet';
 import JsonSpec from './components/JsonSpec';
 import EmbedOptions from './components/EmbedOptions';
+import StylingOptions from './components/StylingOptions';
 import './Configure.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -20,6 +21,7 @@ export default function Configure() {
     listenerDashboardLayout: false,
     embedOptions: "{}",
     jsonSpec: "{}",
+    mainDivStyle: "",
   });
   // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
 
@@ -61,6 +63,10 @@ export default function Configure() {
       let jsonSpec = tableau.extensions.settings.get('jsonSpec');
       if (jsonSpec) {
         updateJsonSpec(jsonSpec);
+      }
+      let mainDivStyle = tableau.extensions.settings.get('mainDivStyle');
+      if (mainDivStyle) {
+        updateStylingOptions({mainDivStyle: mainDivStyle});
       }
     });
   }, []);
@@ -104,6 +110,13 @@ export default function Configure() {
     // console.debug('[Configure.jsx] updateListenerDashboardLayout', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDashboardLayout: checked
+    }));
+  }
+
+  function updateStylingOptions(styles) {
+    console.debug('[Configure.jsx] updateStylingOptions', styles);
+    changeConfig(prevConfig => ({...prevConfig,
+      mainDivStyle: styles.mainDivStyle
     }));
   }
 
@@ -187,7 +200,7 @@ export default function Configure() {
           alignment='left'
           onTabChange={setSelectedTabIndex}
           selectedTabIndex={selectedTabIndex}
-          tabs={[ { content: 'Data Input' }, { content: 'Vega Spec' }, { content: 'Embed Options' } ]}
+          tabs={[ { content: 'Data Input' }, { content: 'Vega Spec' }, { content: 'Embed Options' }, { content: 'Styling' } ]}
           >
           <div className='configForm'>
           { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
@@ -196,6 +209,7 @@ export default function Configure() {
           { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDashboardLayout} onChange={e => updateListenerDashboardLayout(e.target.checked)}>DashboardLayoutChanged Listener</ToggleSwitch></div> : null }
           { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
           { selectedTabIndex === 2 ? <EmbedOptions options={config.embedOptions} updateEmbedOptions={updateEmbedOptions} /> : null }
+          { selectedTabIndex === 3 ? <StylingOptions mainDivStyle={config.mainDivStyle} updateStylingOptions={updateStylingOptions} /> : null }
           </div>
 
         </Tabs>

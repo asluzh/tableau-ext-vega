@@ -116,6 +116,9 @@ export default function Extension() {
       listenerFilterChanged = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
       listenerSummaryDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
       listenerDashboardLayoutChanged = tableau.extensions.settings.get('listenerDashboardLayout') === 'true';
+      ref.current.style = tableau.extensions.settings.get('mainDivStyle');
+      // console.debug('[Extension.jsx] ref style:', ref.current.style);
+      // width: 100vw; height: calc(100vh - 4px); border: 1px dashed lightgray;
       // DashboardLayoutChanged event is always useful in authoring mode, so enable it automatically
       // if (tableau.extensions.environment.mode === "authoring") {
       //   listenerDashboardLayoutChanged = true;
@@ -230,10 +233,6 @@ export default function Extension() {
   }, [vegaEmbed, embedOptions, jsonSpec]);
 
   return (
-    <div style={{
-      width: "100vw",
-      height: "calc(100vh - 4px)",
-      border: "1px dashed lightgray"
-    }} ref={ref} />
+    <div ref={ref} />
   )
 }
