@@ -73,42 +73,42 @@ export default function Configure() {
   }, []);
 
   function updateSheet(name) {
-    // console.debug('[Configure.jsx] updateSheet', name);
+    console.debug('[Configure.jsx] updateSheet', name);
     changeConfig(prevConfig => ({...prevConfig,
       sheet: name
     }));
   }
 
   function updateEmbedOptions(options) {
-    // console.debug('[Configure.jsx] updateEmbedOptions', options);
+    console.debug('[Configure.jsx] updateEmbedOptions', options);
     changeConfig(prevConfig => ({...prevConfig,
       embedOptions: options
     }));
   }
 
   function updateJsonSpec(spec) {
-    // console.debug('[Configure.jsx] updateJsonSpec', spec);
+    console.debug('[Configure.jsx] updateJsonSpec', spec);
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
   }
 
   function updateListenerFilterEvent(checked) {
-    // console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
+    console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerFilterEvent: checked
     }));
   }
 
   function updateListenerDataChanged(checked) {
-    // console.debug('[Configure.jsx] updateListenerDataChanged', checked);
+    console.debug('[Configure.jsx] updateListenerDataChanged', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDataChanged: checked
     }));
   }
 
   function updateListenerDashboardLayout(checked) {
-    // console.debug('[Configure.jsx] updateListenerDashboardLayout', checked);
+    console.debug('[Configure.jsx] updateListenerDashboardLayout', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDashboardLayout: checked
     }));

@@ -37,7 +37,9 @@ export default function JsonSpec(props) {
   return (
     <div style={{ marginTop: 20, marginBottom: 20 }}>
       <TextArea
-        style={{ width: '550px', height: '350px' }}
+        style={{ width: '530px', height: '350px', whiteSpace: 'pre', fontFamily: 'monospace' }}
+        spellCheck={false}
+        wrap='off'
         label="Vega/Vega-Lite Specification"
         value={jsonSpec}
         message={parsingMessage}
