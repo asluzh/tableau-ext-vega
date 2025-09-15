@@ -20,9 +20,9 @@ export default function Configure() {
     listenerFilterEvent: false,
     listenerDataChanged: true,
     listenerDashboardLayout: false,
-    embedOptions: "{}",
-    jsonSpec: "{}",
-    mainDivStyle: "",
+    embedOptions: '{}',
+    jsonSpec: '{ "actions": false, "config": {} }',
+    mainDivStyle: 'width: 100vw; height: 100vh;',
   });
   // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
 
