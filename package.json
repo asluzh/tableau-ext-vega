@@ -2,7 +2,7 @@
   "name": "tableau-ext-vega",
   "description": "Tableau Extension Vega",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "scripts": {
     "prepublish": "npm run build",

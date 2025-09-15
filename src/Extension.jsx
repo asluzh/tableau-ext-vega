@@ -53,12 +53,13 @@ export default function Extension() {
           // includeDataValuesOption: tableau.IncludeDataValuesOption.AllValues, // AllValues, OnlyFormattedValues, OnlyNativeValues
           // maxRows: 0, // 0 means no limit
         });
-        // console.debug('[Extension.jsx] data reader row count:', dataTableReader.totalRowCount);
+        console.debug('[Extension.jsx] data reader row count:', dataTableReader.totalRowCount);
         if (dataTableReader.pageCount > 0) {
           try {
             const dataTable = await dataTableReader.getAllPagesAsync();
             // console.debug('[Extension.jsx] getAllPagesAsync dataTable:', dataTable);
             const columns = dataTable.columns.map(col => col.fieldName);
+            console.debug('[Extension.jsx] worksheet columns:', columns);
             const data = dataTable.data.map(row => {
               const obj = {};
               row.forEach((cell, idx) => {
