@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import embed from 'vega-embed';
 import JSON5 from 'json5'
+import packageJson from '../package.json';
 import './Extension.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -30,6 +31,8 @@ export default function Extension() {
   const [data, setData] = useState([]);
   const [embedOptions, setEmbedOptions] = useState(null);
   const [jsonSpec, setJsonSpec] = useState(null);
+
+  console.log('[Extension.jsx] Running', packageJson.name, packageJson.version);
 
   useEffect(() => {
     let listenerFilterChanged = false;
