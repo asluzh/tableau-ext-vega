@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TextArea } from '@tableau/tableau-ui';
+import { TextArea } from '@tableau/tableau-ui'
 
 export default function StylingOptions(props) {
   const [mainDivStyle, setMainDivStyle] = useState(props.mainDivStyle);

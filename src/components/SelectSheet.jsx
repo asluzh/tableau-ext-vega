@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { DropdownSelect } from '@tableau/tableau-ui';
+import { DropdownSelect } from '@tableau/tableau-ui'
+import logger from '../utils/logger.js'
 
 export default function SelectSheet(props) {
   const [sheet, setSheet] = useState(props.sheet);
 
   useEffect(() => {
-    console.debug('[SelectSheet.jsx] useEffect props changed:', props);
+    logger.debug('useEffect props', props);
     setSheet(props.sheet);
   }, [props]);
 

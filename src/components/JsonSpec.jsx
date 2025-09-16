@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
-import { TextArea, Button } from '@tableau/tableau-ui';
+import { TextArea, Button } from '@tableau/tableau-ui'
 import JSON5 from 'json5'
+import logger from '../utils/logger.js'
 
 export default function JsonSpec(props) {
   const [jsonSpec, setJsonSpec] = useState(props.spec);
@@ -30,7 +31,7 @@ export default function JsonSpec(props) {
       setJsonSpec(formatted);
       props.updateJsonSpec(formatted);
     } catch (e) {
-      console.error("Error in JSON:", e.message);
+      logger.error("Error in JSON:", e.message);
     }
   }
 

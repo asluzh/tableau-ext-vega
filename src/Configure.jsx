@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Tabs, Button, ToggleSwitch } from '@tableau/tableau-ui';
-import SelectSheet from './components/SelectSheet';
-import JsonSpec from './components/JsonSpec';
-import EmbedOptions from './components/EmbedOptions';
-import StylingOptions from './components/StylingOptions';
+import { Tabs, Button, ToggleSwitch } from '@tableau/tableau-ui'
+import SelectSheet from './components/SelectSheet'
+import JsonSpec from './components/JsonSpec'
+import EmbedOptions from './components/EmbedOptions'
+import StylingOptions from './components/StylingOptions'
 import JSON5 from 'json5'
+import logger from './utils/logger.js'
 import './Configure.css'
 
 // Declare this so our linter knows that tableau is a global object
@@ -27,19 +28,19 @@ export default function Configure() {
   // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
 
   useEffect(() => {
-    console.debug('[Configure.jsx] useEffect');
+    logger.debug('useEffect');
     //Initialise Extension
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
-      console.debug('[Configure.jsx] Initialize Dialog', openPayload);
+      logger.debug('Initialize Dialog', openPayload);
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       let metaVersion = parseInt(tableau.extensions.settings.get('metaVersion'));
-      console.debug('[Configure.jsx] saved meta version', metaVersion);
+      logger.debug('Ssaved meta version', metaVersion);
       if (metaVersion > CONFIG_META_VERSION) {
-        console.warn('[Configure.jsx] newer meta version detected in settings!')
+        logger.warn('Newer meta version detected in settings!')
         return;
       }
       if (metaVersion < CONFIG_META_VERSION) {
-        console.log('[Configure.jsx] older meta version detected in saved settings, some settings may not be available');
+        logger.log('Older meta version detected in saved settings, some settings may not be available');
       }
       let sheet = tableau.extensions.settings.get('sheet');
       if (sheet) {
@@ -73,49 +74,49 @@ export default function Configure() {
   }, []);
 
   function updateSheet(name) {
-    console.debug('[Configure.jsx] updateSheet', name);
+    logger.debug('updateSheet', name);
     changeConfig(prevConfig => ({...prevConfig,
       sheet: name
     }));
   }
 
   function updateEmbedOptions(options) {
-    console.debug('[Configure.jsx] updateEmbedOptions', options);
+    logger.debug('updateEmbedOptions', options);
     changeConfig(prevConfig => ({...prevConfig,
       embedOptions: options
     }));
   }
 
   function updateJsonSpec(spec) {
-    console.debug('[Configure.jsx] updateJsonSpec', spec);
+    logger.debug('updateJsonSpec', spec);
     changeConfig(prevConfig => ({...prevConfig,
       jsonSpec: spec
     }));
   }
 
   function updateListenerFilterEvent(checked) {
-    console.debug('[Configure.jsx] updateListenerFilterEvent', checked);
+    logger.debug('updateListenerFilterEvent', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerFilterEvent: checked
     }));
   }
 
   function updateListenerDataChanged(checked) {
-    console.debug('[Configure.jsx] updateListenerDataChanged', checked);
+    logger.debug('updateListenerDataChanged', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDataChanged: checked
     }));
   }
 
   function updateListenerDashboardLayout(checked) {
-    console.debug('[Configure.jsx] updateListenerDashboardLayout', checked);
+    logger.debug('updateListenerDashboardLayout', checked);
     changeConfig(prevConfig => ({...prevConfig,
       listenerDashboardLayout: checked
     }));
   }
 
   function updateStylingOptions(styles) {
-    console.debug('[Configure.jsx] updateStylingOptions', styles);
+    logger.debug('updateStylingOptions', styles);
     changeConfig(prevConfig => ({...prevConfig,
       mainDivStyle: styles.mainDivStyle
     }));
@@ -123,26 +124,26 @@ export default function Configure() {
 
   function validInputs() {
     if (!config.sheet) {
-      console.warn('[Configure.jsx] sheet empty');
+      logger.warn('Sheet variable is empty');
       return false;
     }
     try {
       JSON5.parse(config.embedOptions);
     } catch (e) {
-      console.warn('[Configure.jsx] invalid embedOptions', e);
+      logger.warn('Invalid embedOptions', e);
       return false;
     }
     try {
       JSON5.parse(config.jsonSpec);
     } catch (e) {
-      console.warn('[Configure.jsx] invalid jsonSpec', e);
+      logger.warn('Invalid jsonSpec', e);
       return false;
     }
     return true;
   }
 
   function saveSettings(e) {
-    console.debug('[Configure.jsx] saveSettings', e);
+    logger.debug('saveSettings', e);
     if (validInputs() && tableau.extensions.environment.mode === "authoring") {
       tableau.extensions.settings.set('metaVersion', CONFIG_META_VERSION);
       // iterate through config object and save each key/value pair
@@ -150,7 +151,7 @@ export default function Configure() {
         tableau.extensions.settings.set(key, value);
       });
       tableau.extensions.settings.saveAsync().then(() => {
-        console.debug('[Configure.jsx] Settings saved');
+        logger.debug('Settings saved');
         if (e.target.name === "save") {
           tableau.extensions.ui.closeDialog('Save and close');
         }
@@ -161,12 +162,12 @@ export default function Configure() {
   }
 
   function closeSettings(e) {
-    console.debug('[Configure.jsx] closeSettings', e);
+    logger.debug('closeSettings', e);
     tableau.extensions.ui.closeDialog('Close');
   }
 
   function resetSettings(e) {
-    console.debug('[Configure.jsx] resetSettings', e);
+    logger.debug('resetSettings', e);
     let sheet = tableau.extensions.settings.get('sheet');
     if (sheet) {
       updateSheet(sheet);
