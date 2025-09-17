@@ -1,6 +1,7 @@
 {
   "name": "tableau-ext-vega",
   "description": "Tableau Extension Vega",
+  "homepage": "https://asluzh.github.io/tableau-ext-vega/",
   "private": true,
   "version": "0.2.5",
   "type": "module",
@@ -17,8 +18,7 @@
     "json5": "^2.2.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "vega-embed": "^7.0.2",
-    "vega-lite": "^6.2.0"
+    "vega-embed": "^7.0.2"
   },
   "overrides": {
     "@tableau/tableau-ui": {
