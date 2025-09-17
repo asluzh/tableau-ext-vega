@@ -38,7 +38,7 @@ export default function EmbedOptions(props) {
   return (
     <div style={{ marginTop: 20, marginBottom: 20 }}>
       <TextArea
-        style={{ width: '530px', height: '350px', whiteSpace: 'pre', fontFamily: 'monospace' }}
+        style={{ width: '530px', height: '350px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}
         spellCheck={false}
         wrap='off'
         label="Vega-Embed Options"

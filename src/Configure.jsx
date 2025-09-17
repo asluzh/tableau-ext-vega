@@ -14,27 +14,26 @@ import './Configure.css'
 const CONFIG_META_VERSION = 1;
 
 export default function Configure() {
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(0);
   const [sheets, setSheets] = useState([]);
   const [config, changeConfig] = useState({
     sheet: "",
     listenerFilterEvent: false,
     listenerDataChanged: true,
     listenerDashboardLayout: false,
-    embedOptions: '{}',
-    jsonSpec: '{ "actions": false, "config": {} }',
+    jsonSpec: '{}',
+    embedOptions: '{ "actions": false, "config": {} }',
     mainDivStyle: 'width: 100vw; height: 100vh;',
   });
   // const maxSpecLength = 10000; // total workbook length limit is 2MB, so the character limit is rarely a problem
 
   useEffect(() => {
     logger.debug('useEffect');
-    //Initialise Extension
     tableau.extensions.initializeDialogAsync().then((openPayload) => {
       logger.debug('Initialize Dialog', openPayload);
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       let metaVersion = parseInt(tableau.extensions.settings.get('metaVersion'));
-      logger.debug('Ssaved meta version', metaVersion);
+      logger.debug('Saved meta version', metaVersion);
       if (metaVersion > CONFIG_META_VERSION) {
         logger.warn('Newer meta version detected in settings!')
         return;
@@ -71,6 +70,7 @@ export default function Configure() {
         updateStylingOptions({mainDivStyle: mainDivStyle});
       }
     });
+    window.JSON5 = JSON5; // TODO remove
   }, []);
 
   function updateSheet(name) {
@@ -192,7 +192,7 @@ export default function Configure() {
     if (jsonSpec) {
       updateJsonSpec(jsonSpec);
     }
-    setSelectedTabIndex(0);
+    setTabIndex(0);
   }
 
   return (
@@ -200,18 +200,37 @@ export default function Configure() {
         <Tabs
           activation='automatic'
           alignment='left'
-          onTabChange={setSelectedTabIndex}
-          selectedTabIndex={selectedTabIndex}
-          tabs={[ { content: 'Data Input' }, { content: 'Vega Spec' }, { content: 'Embed Options' }, { content: 'Styling' } ]}
-          >
+          onTabChange={setTabIndex}
+          selectedTabIndex={tabIndex}
+          tabs={[
+            { content: 'Data Input' },
+            { content: 'Vega Spec' },
+            { content: 'Embed Options' },
+            { content: 'Styling' },
+          ]}
+        >
           <div className='configForm'>
-          { selectedTabIndex === 0 ? <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} /> : null }
-          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>FilterChanged Listener</ToggleSwitch></div> : null }
-          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>SummaryDataChanged Listener</ToggleSwitch></div> : null }
-          { selectedTabIndex === 0 ? <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDashboardLayout} onChange={e => updateListenerDashboardLayout(e.target.checked)}>DashboardLayoutChanged Listener</ToggleSwitch></div> : null }
-          { selectedTabIndex === 1 ? <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} /> : null }
-          { selectedTabIndex === 2 ? <EmbedOptions options={config.embedOptions} updateEmbedOptions={updateEmbedOptions} /> : null }
-          { selectedTabIndex === 3 ? <StylingOptions mainDivStyle={config.mainDivStyle} updateStylingOptions={updateStylingOptions} /> : null }
+            {tabIndex === 0 && (
+              <SelectSheet sheets={sheets} sheet={config.sheet} updateSheet={updateSheet} />
+            )}
+            {tabIndex === 0 && (
+              <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerFilterEvent} onChange={e => updateListenerFilterEvent(e.target.checked)}>FilterChanged Listener</ToggleSwitch></div>
+            )}
+            {tabIndex === 0 && (
+              <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDataChanged} onChange={e => updateListenerDataChanged(e.target.checked)}>SummaryDataChanged Listener</ToggleSwitch></div>
+            )}
+            {tabIndex === 0 && (
+              <div style={{ width: 250, paddingTop: 10 }}><ToggleSwitch textAlign="left" checked={config.listenerDashboardLayout} onChange={e => updateListenerDashboardLayout(e.target.checked)}>DashboardLayoutChanged Listener</ToggleSwitch></div>
+            )}
+            {tabIndex === 1 && (
+              <JsonSpec spec={config.jsonSpec} updateJsonSpec={updateJsonSpec} />
+            )}
+            {tabIndex === 2 && (
+              <EmbedOptions options={config.embedOptions} updateEmbedOptions={updateEmbedOptions} />
+            )}
+            {tabIndex === 3 && (
+              <StylingOptions mainDivStyle={config.mainDivStyle} updateStylingOptions={updateStylingOptions} />
+            )}
           </div>
 
         </Tabs>
