@@ -113,10 +113,12 @@ export default function Extension() {
       }
     };
     const updateSettings = async () => {
-      let sheet = tableau.extensions.settings.get('sheet');
+      const sheet = tableau.extensions.settings.get('sheet');
       logger.debug('Data sheet', sheet);
-      setEmbedOptions(JSON5.parse(tableau.extensions.settings.get('embedOptions')));
-      setJsonSpec(JSON5.parse(tableau.extensions.settings.get('jsonSpec')));
+      const embedOptionsText = tableau.extensions.settings.get('embedOptions').replace(/(\r|\n)/g,'');
+      setEmbedOptions(JSON5.parse(embedOptionsText));
+      const jsonSpecText = tableau.extensions.settings.get('jsonSpec').replace(/(\r|\n)/g,'');
+      setJsonSpec(JSON5.parse(jsonSpecText));
       listenerFilterChanged = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
       listenerSummaryDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
       listenerDashboardLayoutChanged = tableau.extensions.settings.get('listenerDashboardLayout') === 'true';

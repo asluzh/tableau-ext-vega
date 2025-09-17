@@ -7,7 +7,7 @@ export default function JsonSpec(props) {
   const [jsonSpec, setJsonSpec] = useState(props.spec);
   const parsingMessage = useMemo(() => {
     try {
-      JSON5.parse(jsonSpec);
+      JSON5.parse(jsonSpec.replace(/(\r|\n)/g,''));
     } catch (e) {
       return (`Invalid input: ${e.message}`);
     }
@@ -21,12 +21,12 @@ export default function JsonSpec(props) {
 
   async function formatJson(btn) {
     try {
-      let parsed = JSON5.parse(jsonSpec);
+      let parsed = JSON5.parse(jsonSpec.replace(/(\r|\n)/g,''));
       let formatted = null;
       if (btn.target.name === "json5") {
-        formatted = JSON5.stringify(parsed, null, 4);
+        formatted = JSON5.stringify(parsed, null, 2);
       } else {
-        formatted = JSON.stringify(parsed, null, 4);
+        formatted = JSON.stringify(parsed, null, 2);
       }
       setJsonSpec(formatted);
       props.updateJsonSpec(formatted);

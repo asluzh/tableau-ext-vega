@@ -70,7 +70,7 @@ export default function Configure() {
         updateStylingOptions({mainDivStyle: mainDivStyle});
       }
     });
-    window.JSON5 = JSON5; // TODO remove
+    // window.JSON5 = JSON5; // for debugging application of JSON5 parsing
   }, []);
 
   function updateSheet(name) {
@@ -128,13 +128,13 @@ export default function Configure() {
       return false;
     }
     try {
-      JSON5.parse(config.embedOptions);
+      JSON5.parse(config.embedOptions.replace(/(\r|\n)/g,''));
     } catch (e) {
       logger.warn('Invalid embedOptions', e);
       return false;
     }
     try {
-      JSON5.parse(config.jsonSpec);
+      JSON5.parse(config.jsonSpec.replace(/(\r|\n)/g,''));
     } catch (e) {
       logger.warn('Invalid jsonSpec', e);
       return false;
