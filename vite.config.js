@@ -32,7 +32,27 @@ export default defineConfig({
       input: {
         main: 'index.html',
         configure: 'configure.html',
-      }
+      },
+      output: {
+        manualChunks(id) {
+          // if (id.includes('node_modules/d3-')) {
+          //     return 'd3';
+          // }
+          // if (id.includes('node_modules/vega-embed')) {
+          //     return 'vega-embed';
+          // }
+          // if (id.includes('node_modules/vega')) {
+          //     return 'vega';
+          // }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+        // assetFileNames: (assetInfo) => {
+        //   if (assetInfo.name === 'style.css') return 'custom.css';
+        //   return assetInfo.name;
+        // },
+      },
     }
   }
 })
