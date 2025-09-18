@@ -5,15 +5,17 @@ import packageJson from '../package.json'
 import logger from './utils/logger.js'
 import './Extension.css'
 
-// Declare this so our linter knows that tableau is a global object
-/* global tableau */
+/* Declare this so our linter knows that tableau is a global object
+global tableau
+import "../../../public/lib/tableau.extensions.1.latest.min.js?raw";
+*/
 
 function configure() {
   logger.debug('Opening configure popup');
   const popupUrl = `${window.location.origin}${import.meta.env.BASE_URL}configure.html`;
   tableau.extensions.ui.displayDialogAsync(popupUrl, null, { height: 600, width: 600 })
-  .then((closePayload) => {
-    logger.debug('displayDialogAsync was closed with payload:', closePayload);
+  .then((payload) => {
+    logger.debug('displayDialogAsync was closed with payload:', payload);
   })
   .catch((error) => {
     switch(error.errorCode) {
@@ -33,14 +35,14 @@ export default function Extension() {
   const [embedOptions, setEmbedOptions] = useState(null);
   const [jsonSpec, setJsonSpec] = useState(null);
 
+
   useEffect(() => {
-    let listenerFilterChanged = false;
-    let listenerSummaryDataChanged = false;
-    let listenerDashboardLayoutChanged = false;
-    let unregisterFilterChangedListener = null;
-    let unregisterSummaryDataChangedListener = null;
-    let unregisterDashboardLayoutChangedListener = null;
+
+    let listenerDataChanged = "";
+    let unregisterDataChangedListener = null;
+    let unregisterSettingsChangedListener = null;
     let cancel = false;
+
     const updateData = async (worksheet) => {
       logger.debug('updateData from', worksheet.name);
       if (cancel) {
@@ -85,65 +87,43 @@ export default function Extension() {
         logger.error('getSummaryDataReaderAsync failed:', err.toString());
         setData([]);
       } finally {
-        if (listenerFilterChanged && !unregisterFilterChangedListener) {
-          logger.debug('Added FilterChanged event listener');
-          unregisterFilterChangedListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
-            logger.debug('FilterChanged event');
-            updateData(worksheet);
-          });
-        }
-        if (listenerSummaryDataChanged && !unregisterSummaryDataChangedListener) {
-          logger.debug('Added SummaryDataChanged event listener');
-          unregisterSummaryDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, () => {
-            logger.debug('SummaryDataChanged event');
-            updateData(worksheet);
-          });
-        }
-        if (listenerDashboardLayoutChanged && !unregisterDashboardLayoutChangedListener) {
-          logger.debug('Added DashboardLayoutChanged event listener');
-          unregisterDashboardLayoutChangedListener = worksheet.parentDashboard.addEventListener(tableau.TableauEventType.DashboardLayoutChanged, () => {
-            logger.debug('DashboardLayoutChanged event');
-            // TODO what could be updated here - view size?
-            // vegaEmbed.current.view.width = 400; // window.innerWidth * 0.8;
-            // vegaEmbed.current.view.height = 500; // window.innerHeight * 0.8;
-            // vegaEmbed.current.view.runAsync();
-            // updateData(worksheet);
-          });
+        if (!unregisterDataChangedListener) {
+          switch (listenerDataChanged) {
+          case 'SummaryDataChanged':
+            logger.debug('Adding SummaryDataChanged event listener');
+            unregisterDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, () => {
+              logger.debug('SummaryDataChanged event');
+              updateData(worksheet);
+            });
+            break;
+          case 'FilterChanged':
+            logger.debug('Adding FilterChanged event listener');
+            unregisterDataChangedListener = worksheet.addEventListener(tableau.TableauEventType.FilterChanged, () => {
+              logger.debug('FilterChanged event');
+              updateData(worksheet);
+            });
+            break;
+          }
         }
       }
     };
+
     const updateSettings = async () => {
+      if (unregisterDataChangedListener) {
+        logger.debug(`Removing ${listenerDataChanged} event listener`);
+        unregisterDataChangedListener();
+        unregisterDataChangedListener = null;
+      }
       const sheet = tableau.extensions.settings.get('sheet');
       logger.debug('Data sheet', sheet);
-      const embedOptionsText = tableau.extensions.settings.get('embedOptions').replace(/(\r|\n)/g,'');
-      setEmbedOptions(JSON5.parse(embedOptionsText));
       const jsonSpecText = tableau.extensions.settings.get('jsonSpec').replace(/(\r|\n)/g,'');
       setJsonSpec(JSON5.parse(jsonSpecText));
-      listenerFilterChanged = tableau.extensions.settings.get('listenerFilterEvent') === 'true';
-      listenerSummaryDataChanged = tableau.extensions.settings.get('listenerDataChanged') === 'true';
-      listenerDashboardLayoutChanged = tableau.extensions.settings.get('listenerDashboardLayout') === 'true';
+      const embedOptionsText = tableau.extensions.settings.get('embedOptions').replace(/(\r|\n)/g,'');
+      setEmbedOptions(JSON5.parse(embedOptionsText));
+      listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
       ref.current.style = tableau.extensions.settings.get('mainDivStyle');
       // logger.debug('Ref style:', ref.current.style);
       // width: 100vw; height: calc(100vh - 4px); border: 1px dashed lightgray;
-      // DashboardLayoutChanged event is always useful in authoring mode, so enable it automatically
-      // if (tableau.extensions.environment.mode === "authoring") {
-      //   listenerDashboardLayoutChanged = true;
-      // }
-      if (unregisterFilterChangedListener) {
-        unregisterFilterChangedListener();
-        unregisterFilterChangedListener = null;
-        logger.debug('Removed FilterChanged event listener');
-      }
-      if (unregisterSummaryDataChangedListener) {
-        unregisterSummaryDataChangedListener();
-        unregisterSummaryDataChangedListener = null;
-        logger.debug('Removed SummaryDataChanged event listener');
-      }
-      if (unregisterDashboardLayoutChangedListener) {
-        unregisterDashboardLayoutChangedListener();
-        unregisterDashboardLayoutChangedListener = null;
-        logger.debug('Removed DashboardLayoutChanged event listener');
-      }
       if (sheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
         const worksheet = worksheets.find(s => s.name == sheet);
@@ -155,11 +135,11 @@ export default function Extension() {
         }
         updateData(worksheet);
       }
-    }
+    };
+
     logger.debug('useEffect');
-    let unregisterSettingsChangedListener = null;
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
-      logger.debug('initializeAsync completed');
+      logger.debug('initializeAsync completed, Tableau environment:', tableau.extensions.environment.tableauVersion);
       updateSettings();
       unregisterSettingsChangedListener = tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, (e) => {
         logger.debug('Settings changed:', e);
@@ -177,20 +157,10 @@ export default function Extension() {
         unregisterSettingsChangedListener = null;
         logger.debug('Removed SettingsChanged event listener');
       }
-      if (unregisterFilterChangedListener) {
-        unregisterFilterChangedListener();
-        unregisterFilterChangedListener = null;
-        logger.debug('Removed FilterChanged event listener');
-      }
-      if (unregisterSummaryDataChangedListener) {
-        unregisterSummaryDataChangedListener();
-        unregisterSummaryDataChangedListener = null;
-        logger.debug('Removed SummaryDataChanged event listener');
-      }
-      if (unregisterDashboardLayoutChangedListener) {
-        unregisterSummaryDataChangedListener();
-        unregisterSummaryDataChangedListener = null;
-        logger.debug('Removed DashboardLayoutChanged event listener');
+      if (unregisterDataChangedListener) {
+        logger.debug(`Removing ${listenerDataChanged} event listener`);
+        unregisterDataChangedListener();
+        unregisterDataChangedListener = null;
       }
       vegaEmbed.current?.finalize();
     };

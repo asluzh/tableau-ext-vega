@@ -3,7 +3,7 @@
   "description": "Tableau Extension Vega",
   "homepage": "https://asluzh.github.io/tableau-ext-vega/",
   "private": true,
-  "version": "0.2.8",
+  "version": "0.2.9",
   "type": "module",
   "scripts": {
     "prepublish": "npm run build",

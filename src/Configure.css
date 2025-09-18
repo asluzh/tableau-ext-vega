@@ -8,6 +8,5 @@ body {
 }
 
 .configForm {
-  width: 550px;
-  height: 450px;
+  height: calc(100vh - 170px);
 }

@@ -24,7 +24,7 @@ export default function SelectSheet(props) {
         onChange={handleChange}
         style={sheet ? {} : { border: '1px solid red' }}
       >
-        <option key="" value="">Please select...</option>
+        <option key="" value=""> -- Please select -- </option>
         {props.sheets.map((s) => (
           <option key={s.name} value={s.name}>
             {s.name}
