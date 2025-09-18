@@ -25,11 +25,7 @@ export default function SelectSheet(props) {
         style={sheet ? {} : { border: '1px solid red' }}
       >
         <option key="" value=""> -- Please select -- </option>
-        {props.sheets.map((s) => (
-          <option key={s.name} value={s.name}>
-            {s.name}
-          </option>
-        ))}
+        {props.sheets.map((s) => ( <option key={s.name} value={s.name}>{s.name}</option> ))}
       </DropdownSelect>
     </div>
   );

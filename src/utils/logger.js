@@ -4,10 +4,10 @@ function Logger() {
   case 'production':
     return {
       debug: () => {},
-      log: () => {},
-      info: () => {},
-      warn: () => {},
-      error: () => {},
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
     };
   case 'development':
   default:

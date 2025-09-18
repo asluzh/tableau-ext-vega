@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import embed from 'vega-embed'
 import JSON5 from 'json5'
 import packageJson from '../package.json'
+import { loadConfig } from './utils/settings.js'
 import logger from './utils/logger.js'
 import './Extension.css'
 
@@ -114,22 +115,19 @@ export default function Extension() {
         unregisterDataChangedListener();
         unregisterDataChangedListener = null;
       }
-      const sheet = tableau.extensions.settings.get('sheet');
-      logger.debug('Data sheet', sheet);
-      const jsonSpecText = tableau.extensions.settings.get('jsonSpec').replace(/(\r|\n)/g,'');
+      const config = loadConfig();
+      const jsonSpecText = config.jsonSpec?.replace(/(\r|\n)/g,'');
       setJsonSpec(JSON5.parse(jsonSpecText));
-      const embedOptionsText = tableau.extensions.settings.get('embedOptions').replace(/(\r|\n)/g,'');
+      const embedOptionsText = config.embedOptions?.replace(/(\r|\n)/g,'');
       setEmbedOptions(JSON5.parse(embedOptionsText));
-      listenerDataChanged = tableau.extensions.settings.get('listenerDataChanged');
-      ref.current.style = tableau.extensions.settings.get('mainDivStyle');
-      // logger.debug('Ref style:', ref.current.style);
-      // width: 100vw; height: calc(100vh - 4px); border: 1px dashed lightgray;
-      if (sheet) {
+      listenerDataChanged = config.listenerDataChanged; // save a copy in the closure variable
+      ref.current.style = config.mainDivStyle;
+      if (config.sheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-        const worksheet = worksheets.find(s => s.name == sheet);
         // logger.debug('Worksheets', worksheets);
+        const worksheet = worksheets.find(s => s.name === config.sheet);
         if (!worksheet) {
-          logger.warn('Worksheet not found:', sheet);
+          logger.warn('Worksheet not found:', config.sheet);
           setData([]);
           return;
         }
