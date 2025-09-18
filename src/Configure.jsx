@@ -20,15 +20,18 @@ export default function Configure() {
   const [enableSave, setEnableSave] = useState(true);
   const [summaryDataChangedAvailable, setSummaryDataChangedAvailable] = useState(false);
   const [config, setConfig] = useState(defaultConfig());
+  const [footer, setFooter] = useState("");
 
   useEffect(() => {
     logger.debug('useEffect');
     tableau.extensions.initializeDialogAsync().then((payload) => {
       logger.debug('initializeDialogAsync completed', payload);
-      logger.debug('Tableau environment:', tableau.extensions.environment.tableauVersion);
+      // logger.debug('Tableau environment:', tableau.extensions.environment.tableauVersion);
       setSummaryDataChangedAvailable(tableau.extensions.environment.tableauVersion && tableau.extensions.environment.tableauVersion >= "2024");
       setSheets(tableau.extensions.dashboardContent.dashboard.worksheets);
       setConfig(loadConfig());
+      // setFooter(`${tableau.extensions.environment.tableauVersion}, API ${tableau.extensions.environment.apiVersion}, ID: ${tableau.extensions.dashboardObjectId}`)
+      setFooter(`Object ID: ${tableau.extensions.dashboardObjectId}`)
     });
     return () => {
       logger.debug('useEffect unmount');
@@ -154,10 +157,16 @@ export default function Configure() {
           )}
         </div>
       </Tabs>
-      <div
-        style={{
+      <div style={{
+          left: 20,
           bottom: 20,
+          position: 'fixed'
+        }} >
+        {footer}
+      </div>
+      <div style={{
           right: 20,
+          bottom: 20,
           position: 'fixed'
         }}
       >

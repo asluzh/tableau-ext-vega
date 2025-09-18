@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { Spinner, Button, Sticker } from '@tableau/tableau-ui'
 import embed from 'vega-embed'
 import JSON5 from 'json5'
 import packageJson from '../package.json'
@@ -32,6 +33,7 @@ function configure() {
 export default function Extension() {
   const ref = useRef(null);
   const vegaEmbed = useRef(null);
+  const [ready, setReady] = useState(0);
   const [data, setData] = useState([]);
   const [embedOptions, setEmbedOptions] = useState(null);
   const [jsonSpec, setJsonSpec] = useState(null);
@@ -116,13 +118,13 @@ export default function Extension() {
         unregisterDataChangedListener = null;
       }
       const config = loadConfig();
-      const jsonSpecText = config.jsonSpec?.replace(/(\r|\n)/g,'');
-      setJsonSpec(JSON5.parse(jsonSpecText));
-      const embedOptionsText = config.embedOptions?.replace(/(\r|\n)/g,'');
-      setEmbedOptions(JSON5.parse(embedOptionsText));
-      listenerDataChanged = config.listenerDataChanged; // save a copy in the closure variable
-      ref.current.style = config.mainDivStyle;
       if (config.sheet) {
+        const jsonSpecText = config.jsonSpec?.replace(/(\r|\n)/g,'');
+        setJsonSpec(JSON5.parse(jsonSpecText));
+        const embedOptionsText = config.embedOptions?.replace(/(\r|\n)/g,'');
+        setEmbedOptions(JSON5.parse(embedOptionsText));
+        listenerDataChanged = config.listenerDataChanged; // save a copy in the closure variable
+        ref.current.style = config.mainDivStyle;
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
         // logger.debug('Worksheets', worksheets);
         const worksheet = worksheets.find(s => s.name === config.sheet);
@@ -132,12 +134,17 @@ export default function Extension() {
           return;
         }
         updateData(worksheet);
+        setReady(2); // extension ready to display
+      } else {
+        setReady(1); // show config button
       }
     };
 
     logger.debug('useEffect');
     tableau.extensions.initializeAsync({'configure': configure}).then(() => {
-      logger.debug('initializeAsync completed, Tableau environment:', tableau.extensions.environment.tableauVersion);
+      logger.debug('initializeAsync completed, API version:', tableau.extensions.environment.apiVersion);
+      logger.debug('Tableau environment:', tableau.extensions.environment.context, tableau.extensions.environment.tableauVersion);
+      logger.debug('Tableau extension object ID:', tableau.extensions.dashboardObjectId);
       updateSettings();
       unregisterSettingsChangedListener = tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, (e) => {
         logger.debug('Settings changed:', e);
@@ -167,19 +174,23 @@ export default function Extension() {
   useEffect(() => {
     logger.debug('useEffect data update');
     // TODO add option to show banner text when empty data, instead of blank chart
-    if (data) {
+    if (data && ready === 2) {
       if (!vegaEmbed.current) {
         logger.debug('No embed instance yet');
       } else {
-        vegaEmbed.current.view.data("vizdata", data).runAsync();
+        try {
+          vegaEmbed.current.view.data("vizdata", data).runAsync();
+        } catch (err) {
+          logger.error('Error updating data:', err.toString());
+        }
       }
     }
-  }, [vegaEmbed, data]);
+  }, [vegaEmbed, data, ready]);
 
   useEffect(() => {
     logger.debug('useEffect embed settings update');
     const createView = async () => {
-      if (ref.current && embedOptions && jsonSpec) {
+      if (ref.current && embedOptions && jsonSpec && ready === 2) {
         try {
           if (vegaEmbed.current) {
             if (JSON5.stringify(vegaEmbed.current.spec) !== JSON5.stringify(jsonSpec)) {
@@ -203,9 +214,29 @@ export default function Extension() {
       }
     };
     createView();
-  }, [vegaEmbed, embedOptions, jsonSpec]);
+  }, [vegaEmbed, embedOptions, jsonSpec, ready]);
 
   return (
-    <div ref={ref} />
+    <div ref={ref}>
+      {ready === 0 && (
+        <div aria-busy="true" className="overlay">
+          <div className="centerOnPage">
+            <Spinner color="dark" />
+          </div>
+        </div>
+      )}
+      {ready === 1 && tableau.extensions.environment.mode === "authoring" && (
+        <div className="centerOnPage">
+          <Button kind="outline" onClick={configure}>
+            Configure Extension
+          </Button>
+        </div>
+      )}
+      {ready === 1 && tableau.extensions.environment.mode === "viewing" && (
+        <div className="centerOnPage">
+          <Sticker stickerType="yellow">This extension needs configuring</Sticker>
+        </div>
+      )}
+    </div>
   )
 }
